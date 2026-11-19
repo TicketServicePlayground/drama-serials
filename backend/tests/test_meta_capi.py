@@ -66,3 +66,17 @@ async def test_off_without_token(client, gateways, monkeypatch):  # noqa: F811
     gateways[Provider.XENDIT].settle(await ref_of(paid["id"]))
     await client.get(f"/api/v1/payments/{paid['id']}", headers=headers)
     assert sent == []
+
+
+async def test_team_purchases_stay_out_of_meta(client, gateways, capi, monkeypatch):  # noqa: F811
+    email = f"capi-team-{uuid.uuid4().hex[:6]}@example.com"
+    monkeypatch.setattr(settings, "test_emails", email)
+    headers = await signup(client, email)
+    # The test flag is set on the account's first counted visit.
+    await client.post("/api/v1/visits", json={"path": "/", "ip": "1.1.1.1", "ua": "Mozilla/5.0 (iPhone) Mobile"}, headers=headers)
+    paid = (
+        await client.post("/api/v1/payments", json={"method": "QRIS", "product": "week"}, headers=headers)
+    ).json()
+    gateways[Provider.XENDIT].settle(await ref_of(paid["id"]))
+    paid_state = (await client.get(f"/api/v1/payments/{paid['id']}", headers=headers)).json()
+    assert paid_state["status"] == "paid" and capi == []

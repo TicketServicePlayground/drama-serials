@@ -41,6 +41,13 @@ class Settings(BaseSettings):
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
 
+    # Meta Conversions API (app/meta_capi.py): the pixel id the site uses and a system-user
+    # access token from Events Manager. Either empty = no server-side events.
+    meta_pixel_id: str = ""
+    meta_capi_token: str = ""
+    # Events Manager → Test events code, to check the setup; leave empty in production.
+    meta_test_event_code: str = ""
+
     # Secret part of the visit stats link (/stats/<key> on the site); empty = stats off.
     stats_key: str = ""
     # Outgoing mail (series-pass reminders, app/reminders.py); empty host = no emails.

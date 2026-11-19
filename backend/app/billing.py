@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import notify
+from app import meta_capi, notify
 from app.models import AccessGrant, EpisodeUnlock, Payment, PaymentStatus, User
 from app.products import products
 from app.providers import ProviderError, Snapshot, provider
@@ -154,6 +154,8 @@ async def apply_snapshot(
     else:
         payment.status = snapshot.status
     await session.commit()
+    if payment.status == PaymentStatus.PAID:
+        meta_capi.purchase(payment)
     await _notify_outcome(session, payment)
     return payment
 

@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -79,6 +79,12 @@ class Registration(Credentials):
     accept_terms: bool = False
 
 
+class AdContext(BaseModel):
+    ua: str | None = Field(default=None, max_length=500)
+    fbp: str | None = Field(default=None, max_length=200)
+    fbc: str | None = Field(default=None, max_length=500)
+
+
 class NewPayment(BaseModel):
     method: Literal["QRIS", "CREDIT_CARD", "SBP"]
     product: Literal["episode", "series_day", "week", "month", "year"] = "week"
@@ -87,6 +93,8 @@ class NewPayment(BaseModel):
     episode: int | None = None
     locale: str = "en"
     next: str | None = None
+    # The visitor's browser as the pixel sees it (the site reads the _fbp/_fbc cookies).
+    ad: AdContext | None = None
 
 
 async def current_user(
@@ -305,6 +313,12 @@ async def me(user: CurrentUser, session: Session):
     return await account(session, user)
 
 
+def ad_context(ad: AdContext | None, ip: str) -> dict | None:
+    context = {"ip": ip, **(ad.model_dump(exclude_none=True) if ad else {})}
+    context = {key: value for key, value in context.items() if value}
+    return context or None
+
+
 @router.post("/payments")
 async def start_payment(body: NewPayment, request: Request, user: CurrentUser, session: Session):
     if user is None:
@@ -366,6 +380,7 @@ async def start_payment(body: NewPayment, request: Request, user: CurrentUser, s
         locale=locale,
         return_slug=next_slug,
         terms_version=settings.terms_version,
+        ad_context=ad_context(body.ad, client_ip(request)),
     )
     gateway = provider(payment.provider)
     payment.provider_ref = gateway.reference(payment)

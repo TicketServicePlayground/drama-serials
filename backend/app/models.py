@@ -120,6 +120,9 @@ class Payment(Base):
     # Terms and Refund Policy version the payer agreed to by opening the payment.
     terms_version: Mapped[str | None] = mapped_column(String(20))
     raw: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    # What the Meta pixel saw when the payment was opened: {ip, ua, fbp, fbc}
+    # (app/meta_capi.py sends it with the server-side Purchase).
+    ad_context: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

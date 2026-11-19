@@ -155,7 +155,10 @@ async def apply_snapshot(
         payment.status = snapshot.status
     await session.commit()
     if payment.status == PaymentStatus.PAID:
-        meta_capi.purchase(payment)
+        payer = await session.get(User, payment.user_id)
+        # Team / test accounts (TEST_EMAILS) would teach Meta's optimisation the wrong buyers.
+        if payer is None or not payer.is_test:
+            meta_capi.purchase(payment)
     await _notify_outcome(session, payment)
     return payment
 

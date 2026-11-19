@@ -1,0 +1,67 @@
+import hashlib
+import hmac
+import re
+import secrets
+import uuid
+from datetime import UTC, datetime, timedelta
+
+import jwt
+
+from app.config import settings
+
+EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+# Same parameters and "salt:hash" hex layout as Node's crypto.scrypt defaults, so accounts
+# created by the first, Node-only version of the site keep their passwords.
+SCRYPT_N, SCRYPT_R, SCRYPT_P, SCRYPT_LEN = 16384, 8, 1, 64
+
+
+def normalize_email(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    email = value.strip().lower()
+    return email if len(email) <= 254 and EMAIL_RE.match(email) else None
+
+
+def valid_password(value: object) -> bool:
+    return isinstance(value, str) and 6 <= len(value) <= 200
+
+
+def _scrypt(password: str, salt: bytes, length: int) -> bytes:
+    return hashlib.scrypt(
+        password.encode(),
+        salt=salt,
+        n=SCRYPT_N,
+        r=SCRYPT_R,
+        p=SCRYPT_P,
+        dklen=length,
+        maxmem=64 * 1024 * 1024,
+    )
+
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_bytes(16)
+    return f"{salt.hex()}:{_scrypt(password, salt, SCRYPT_LEN).hex()}"
+
+
+def verify_password(password: str, stored: str) -> bool:
+    salt_hex, _, hash_hex = stored.partition(":")
+    if not salt_hex or not hash_hex:
+        return False
+    expected = bytes.fromhex(hash_hex)
+    actual = _scrypt(password, bytes.fromhex(salt_hex), len(expected))
+    return hmac.compare_digest(actual, expected)
+
+
+def issue_token(user_id: uuid.UUID) -> str:
+    now = datetime.now(UTC)
+    payload = {"sub": str(user_id), "iat": now, "exp": now + timedelta(days=settings.jwt_ttl_days)}
+    return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+
+
+def read_token(token: str) -> uuid.UUID | None:
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+        return uuid.UUID(payload["sub"])
+    except (jwt.PyJWTError, KeyError, ValueError):
+        return None

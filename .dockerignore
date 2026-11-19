@@ -1,0 +1,10 @@
+node_modules
+.next
+data
+.env
+*.tar
+*.tar.gz
+.git
+assets
+backend
+.env.example

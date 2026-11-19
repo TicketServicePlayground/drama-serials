@@ -1,0 +1,103 @@
+# AN Serials on 168.231.121.10 (/opt/drama-serials). Secrets come from .env next to this file
+# (see .env.example); only the site is published, on localhost for nginx.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: drama-serials-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: drama
+      POSTGRES_USER: drama
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - drama-serials-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drama -d drama"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    image: drama-serials-api:latest
+    container_name: drama-serials-api
+    restart: unless-stopped
+    # Its log holds the audit lines (sign-ups, sign-ins, payments, plays with the visitor's IP):
+    # keep more of it than the server's 3 × 10 MB default.
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "10"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://drama:${DB_PASSWORD}@db:5432/drama
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://affinet.link}
+      PAYMENT_METHODS: ${PAYMENT_METHODS:-QRIS,CREDIT_CARD,SBP}
+      IXPAY_API_KEY: ${IXPAY_API_KEY:-}
+      IXPAY_BUSINESS_UNIT_ID: ${IXPAY_BUSINESS_UNIT_ID:-}
+      XENDIT_SECRET_KEY: ${XENDIT_SECRET_KEY:-}
+      XENDIT_WEBHOOK_TOKEN: ${XENDIT_WEBHOOK_TOKEN:-}
+      DOKU_API_URL: ${DOKU_API_URL:-https://api.doku.com}
+      DOKU_CLIENT_ID: ${DOKU_CLIENT_ID:-}
+      DOKU_SECRET_KEY: ${DOKU_SECRET_KEY:-}
+      EVENTSTRIPE_DB_DSN: ${EVENTSTRIPE_DB_DSN:-}
+      # Prices in rupiah: VIP passes at the launch price until LAUNCH_ENDS_AT, then REGULAR_*.
+      PRICE_EPISODE_IDR: ${PRICE_EPISODE_IDR:-10000}
+      PRICE_SERIES_DAY_IDR: ${PRICE_SERIES_DAY_IDR:-12800}
+      PRICE_WEEK_IDR: ${PRICE_WEEK_IDR:-29800}
+      PRICE_MONTH_IDR: ${PRICE_MONTH_IDR:-79800}
+      PRICE_YEAR_IDR: ${PRICE_YEAR_IDR:-449000}
+      REGULAR_WEEK_IDR: ${REGULAR_WEEK_IDR:-129000}
+      REGULAR_MONTH_IDR: ${REGULAR_MONTH_IDR:-349000}
+      REGULAR_YEAR_IDR: ${REGULAR_YEAR_IDR:-1999000}
+      LAUNCH_ENDS_AT: ${LAUNCH_ENDS_AT:-2027-01-01T00:00:00+07:00}
+      LAUNCH_DISCOUNT_PERCENT: ${LAUNCH_DISCOUNT_PERCENT:-77}
+      SERIES_PASS_HOURS: ${SERIES_PASS_HOURS:-24}
+      # Episodes 1..N of every series play free, without signing in.
+      FREE_EPISODES: ${FREE_EPISODES:-7}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      STATS_KEY: ${STATS_KEY:-}
+      # Team / test accounts (comma-separated emails): left out of the stats.
+      TEST_EMAILS: ${TEST_EMAILS:-}
+      # Reminder emails before a one-series pass ends; empty SMTP_HOST = no emails.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-AN Serials <noreply@affinet.link>}
+      REMINDER_HOURS: ${REMINDER_HOURS:-6,1}
+      MEDIA_BUCKET: ${MEDIA_BUCKET:-}
+      MEDIA_PREFIX: ${MEDIA_PREFIX:-video/}
+      MEDIA_R2_ACCOUNT_ID: ${MEDIA_R2_ACCOUNT_ID:-}
+      MEDIA_R2_ACCESS_KEY_ID: ${MEDIA_R2_ACCESS_KEY_ID:-}
+      MEDIA_R2_SECRET_ACCESS_KEY: ${MEDIA_R2_SECRET_ACCESS_KEY:-}
+    # Some resolvers hand out an Akamai node for api.doku.com that drops TLS; these do not.
+    dns: [1.1.1.1, 9.9.9.9]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  web:
+    image: drama-serials:latest
+    container_name: drama-serials
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      API_URL: http://api:8000
+      # Meta Pixel id (digits); empty = no pixel.
+      META_PIXEL_ID: ${META_PIXEL_ID:-}
+    ports:
+      - "127.0.0.1:3010:3000"
+
+volumes:
+  drama-serials-pg:
+  # Accounts of the first, Node-only version (users.json); kept until imported.
+  drama-serials-data:

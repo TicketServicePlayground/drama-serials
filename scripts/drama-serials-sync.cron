@@ -1,0 +1,4 @@
+# Installed by deploy.sh as /etc/cron.d/drama-serials-sync: content sheet → site (scripts/sync-sheet.sh).
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/10 * * * * root /opt/drama-serials/build/scripts/sync-sheet.sh >> /opt/drama-serials/sync/cron.log 2>&1

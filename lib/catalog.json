@@ -1,0 +1,2153 @@
+[
+  {
+    "slug": "apocalypse-mart-my-staff-are-zombie-kings",
+    "source": "apocalypse-mart",
+    "rank": 1,
+    "tag": "new",
+    "genre": "action",
+    "views": 0,
+    "likes": 0,
+    "title": {
+      "id": "Apocalypse Mart: Karyawanku Raja Zombi",
+      "es": "Apocalypse Mart: mis empleados son reyes zombis",
+      "ru": "Апокалипсис-маркет: мои сотрудники — короли зомби",
+      "en": "Apocalypse Mart: My Staff Are Zombie Kings"
+    },
+    "synopsis": {
+      "en": "After the zombie virus, powerless Gwyneth is voted out of the survivors' sector. Alone in the wasteland she finds a strange store, and her first employee is a zombie king.",
+      "id": "Setelah virus zombi, Gwyneth yang tak punya kekuatan diusir dari sektor para penyintas. Sendirian di tanah tandus ia menemukan toko aneh, dan karyawan pertamanya adalah raja zombi.",
+      "es": "Tras el virus zombi, Gwyneth, sin poderes, es expulsada por votación del sector de supervivientes. Sola en el páramo encuentra una tienda extraña, y su primer empleado es un rey zombi.",
+      "ru": "После зомби-вируса Гвинет без способностей изгоняют голосованием из сектора выживших. Одна в пустоши она находит странный магазин, а её первый сотрудник — король зомби."
+    },
+    "episodes": [
+      {
+        "title": {
+          "en": "Betrayed at the End of the World"
+        },
+        "headline": {
+          "en": "The world after the zombie virus: Gwyneth has no powers, and the sector votes on whom to throw out of the room."
+        },
+        "description": {
+          "en": "The world after the zombie virus: Gwyneth has no powers, and the sector votes on whom to throw out of the room."
+        },
+        "duration": 130
+      },
+      {
+        "title": {
+          "en": "Five Minutes to Hire"
+        },
+        "headline": {
+          "en": "Cast out, Gwyneth is alone in the wasteland, until she finds something strange."
+        },
+        "description": {
+          "en": "Cast out, Gwyneth is alone in the wasteland, until she finds something strange."
+        },
+        "duration": 135
+      },
+      {
+        "title": {
+          "en": "My First Employee Is a Zombie King"
+        },
+        "headline": {
+          "en": "Gwyneth hires her first employee and sets rules for a very unusual staff."
+        },
+        "description": {
+          "en": "Gwyneth hires her first employee and sets rules for a very unusual staff."
+        },
+        "duration": 108
+      },
+      {
+        "title": {
+          "en": "Zero Sales, Zero Store"
+        },
+        "headline": {
+          "en": "Terrified survivors walk into the store and can't believe who is behind the counter."
+        },
+        "description": {
+          "en": "Terrified survivors walk into the store and can't believe who is behind the counter."
+        },
+        "duration": 100
+      },
+      {
+        "title": {
+          "en": "The Five-Million Cola"
+        },
+        "headline": {
+          "en": "Gwyneth treats the survivors to cola and food and tries to make her first sale."
+        },
+        "description": {
+          "en": "Gwyneth treats the survivors to cola and food and tries to make her first sale."
+        },
+        "duration": 91
+      },
+      {
+        "title": {
+          "en": "The Ice King Awakens"
+        },
+        "headline": {
+          "en": "Happy customers head home under guard, but someone is waiting on the road."
+        },
+        "description": {
+          "en": "Happy customers head home under guard, but someone is waiting on the road."
+        },
+        "duration": 100
+      },
+      {
+        "title": {
+          "en": "A Friend for the Ice King"
+        },
+        "headline": {
+          "en": "Gwyneth tries to win over the Ice King everyone runs from."
+        },
+        "description": {
+          "en": "Gwyneth tries to win over the Ice King everyone runs from."
+        },
+        "duration": 131
+      },
+      {
+        "title": {
+          "en": "Sector One Wants the Store"
+        },
+        "headline": {
+          "en": "News of the miracle supermarket spreads across the sectors and reaches the wrong people."
+        },
+        "description": {
+          "en": "News of the miracle supermarket spreads across the sectors and reaches the wrong people."
+        },
+        "duration": 88
+      },
+      {
+        "title": {
+          "en": "Upgrade and an Old Wound"
+        },
+        "headline": {
+          "en": "A big order from Sector 9, a store upgrade and a new gift from the system."
+        },
+        "description": {
+          "en": "A big order from Sector 9, a store upgrade and a new gift from the system."
+        },
+        "duration": 125
+      },
+      {
+        "title": {
+          "en": "Uninvited Guests"
+        },
+        "headline": {
+          "en": "Her sister and fiancé mock Gwyneth and gather a battalion to storm the store."
+        },
+        "description": {
+          "en": "Her sister and fiancé mock Gwyneth and gather a battalion to storm the store."
+        },
+        "duration": 141
+      },
+      {
+        "title": {
+          "en": "Touch Her and You Die"
+        },
+        "headline": {
+          "en": "Nathan finds out who really owns the supermarket."
+        },
+        "description": {
+          "en": "Nathan finds out who really owns the supermarket."
+        },
+        "duration": 111
+      },
+      {
+        "title": {
+          "en": "The Lure"
+        },
+        "headline": {
+          "en": "Sector 1 retreats, but Posey plots a dirty revenge, and the system sets a new deadline."
+        },
+        "description": {
+          "en": "Sector 1 retreats, but Posey plots a dirty revenge, and the system sets a new deadline."
+        },
+        "duration": 127
+      },
+      {
+        "title": {
+          "en": "Apocalypse Express"
+        },
+        "headline": {
+          "en": "Gwyneth finds an unexpected use for the horde and launches delivery across the city."
+        },
+        "description": {
+          "en": "Gwyneth finds an unexpected use for the horde and launches delivery across the city."
+        },
+        "duration": 132
+      },
+      {
+        "title": {
+          "en": "The Hellfire Weapon"
+        },
+        "headline": {
+          "en": "The zombie couriers escape a chase, and Nathan gets a secret weapon."
+        },
+        "description": {
+          "en": "The zombie couriers escape a chase, and Nathan gets a secret weapon."
+        },
+        "duration": 117
+      },
+      {
+        "title": {
+          "en": "Break the Collar"
+        },
+        "headline": {
+          "en": "Nathan sets the enslaved Fire King on the store."
+        },
+        "description": {
+          "en": "Nathan sets the enslaved Fire King on the store."
+        },
+        "duration": 92
+      },
+      {
+        "title": {
+          "en": "Employee of the Month"
+        },
+        "headline": {
+          "en": "New staff join, the Employee of the Month contest begins, and there's an attack in the canyon."
+        },
+        "description": {
+          "en": "New staff join, the Employee of the Month contest begins, and there's an attack in the canyon."
+        },
+        "duration": 114
+      },
+      {
+        "title": {
+          "en": "Framed"
+        },
+        "headline": {
+          "en": "Nathan frames Gwyneth and puts her on public trial."
+        },
+        "description": {
+          "en": "Nathan frames Gwyneth and puts her on public trial."
+        },
+        "duration": 122
+      },
+      {
+        "title": {
+          "en": "The Trial"
+        },
+        "headline": {
+          "en": "Gwyneth bursts into her own trial with living proof."
+        },
+        "description": {
+          "en": "Gwyneth bursts into her own trial with living proof."
+        },
+        "duration": 121
+      },
+      {
+        "title": {
+          "en": "Shield for Sale"
+        },
+        "headline": {
+          "en": "Gwyneth turns an assassination attempt into an ad and steals all of Sector 1's allies."
+        },
+        "description": {
+          "en": "Gwyneth turns an assassination attempt into an ad and steals all of Sector 1's allies."
+        },
+        "duration": 104
+      },
+      {
+        "title": {
+          "en": "Phantom Assassins"
+        },
+        "headline": {
+          "en": "At night a squad of phantom assassins comes to the store."
+        },
+        "description": {
+          "en": "At night a squad of phantom assassins comes to the store."
+        },
+        "duration": 104
+      },
+      {
+        "title": {
+          "en": "Blood Mirage"
+        },
+        "headline": {
+          "en": "The kings can't heal, and the assassins' leader walks straight toward the owner."
+        },
+        "description": {
+          "en": "The kings can't heal, and the assassins' leader walks straight toward the owner."
+        },
+        "duration": 86
+      },
+      {
+        "title": {
+          "en": "Purify Him"
+        },
+        "headline": {
+          "en": "Gwyneth decides to buy salvation for the one who came to kill her."
+        },
+        "description": {
+          "en": "Gwyneth decides to buy salvation for the one who came to kill her."
+        },
+        "duration": 86
+      },
+      {
+        "title": {
+          "en": "Final Evolution"
+        },
+        "headline": {
+          "en": "A fourth king joins the team, the staff get jealous, and a plan for revenge on Sector 1 takes shape."
+        },
+        "description": {
+          "en": "A fourth king joins the team, the staff get jealous, and a plan for revenge on Sector 1 takes shape."
+        },
+        "duration": 103
+      },
+      {
+        "title": {
+          "en": "Orbital EMP"
+        },
+        "headline": {
+          "en": "Sector 1 throws heavy mechs and an orbital cannon at the store."
+        },
+        "description": {
+          "en": "Sector 1 throws heavy mechs and an orbital cannon at the store."
+        },
+        "duration": 129
+      },
+      {
+        "title": {
+          "en": "Sitting Duck"
+        },
+        "headline": {
+          "en": "The shield falls, the kings cover Gwyneth with their bodies, and Nathan starts a livestream."
+        },
+        "description": {
+          "en": "The shield falls, the kings cover Gwyneth with their bodies, and Nathan starts a livestream."
+        },
+        "duration": 107
+      },
+      {
+        "title": {
+          "en": "Empty My Account"
+        },
+        "headline": {
+          "en": "Nathan announces an execution, but Gwyneth bets everything."
+        },
+        "description": {
+          "en": "Nathan announces an execution, but Gwyneth bets everything."
+        },
+        "duration": 87
+      },
+      {
+        "title": {
+          "en": "The Blacklist"
+        },
+        "headline": {
+          "en": "The battle is over, the system unlocks franchising, and the kings fight over branches."
+        },
+        "description": {
+          "en": "The battle is over, the system unlocks franchising, and the kings fight over branches."
+        },
+        "duration": 147
+      },
+      {
+        "title": {
+          "en": "Water War"
+        },
+        "headline": {
+          "en": "Sector 1 strikes back with a water blockade, and the allies are forced to abandon Gwyneth."
+        },
+        "description": {
+          "en": "Sector 1 strikes back with a water blockade, and the allies are forced to abandon Gwyneth."
+        },
+        "duration": 92
+      },
+      {
+        "title": {
+          "en": "Stores from the Sky"
+        },
+        "headline": {
+          "en": "Gwyneth searches the system for an answer to the water blockade."
+        },
+        "description": {
+          "en": "Gwyneth searches the system for an answer to the water blockade."
+        },
+        "duration": 95
+      },
+      {
+        "title": {
+          "en": "The Trade Alliance"
+        },
+        "headline": {
+          "en": "Free water, a new Trade Alliance and Gwyneth's public announcement."
+        },
+        "description": {
+          "en": "Free water, a new Trade Alliance and Gwyneth's public announcement."
+        },
+        "duration": 105
+      },
+      {
+        "title": {
+          "en": "Riot in Sector One"
+        },
+        "headline": {
+          "en": "The kings compete for manager jobs, and hunger grows in Sector 1."
+        },
+        "description": {
+          "en": "The kings compete for manager jobs, and hunger grows in Sector 1."
+        },
+        "duration": 128
+      },
+      {
+        "title": {
+          "en": "God's Blood"
+        },
+        "headline": {
+          "en": "Nathan and Posey are thrown out of the sector into the icy wasteland."
+        },
+        "description": {
+          "en": "Nathan and Posey are thrown out of the sector into the icy wasteland."
+        },
+        "duration": 104
+      },
+      {
+        "title": {
+          "en": "Monsters at the Banquet"
+        },
+        "headline": {
+          "en": "The Alliance celebrates, while exiles mutated by the serum march on the store."
+        },
+        "description": {
+          "en": "The Alliance celebrates, while exiles mutated by the serum march on the store."
+        },
+        "duration": 140
+      },
+      {
+        "title": {
+          "en": "Sky City"
+        },
+        "headline": {
+          "en": "Gwyneth decides the traitors' fate, but an unknown object appears in the sky."
+        },
+        "description": {
+          "en": "Gwyneth decides the traitors' fate, but an unknown object appears in the sky."
+        },
+        "duration": 118
+      },
+      {
+        "title": {
+          "en": "The Creator"
+        },
+        "headline": {
+          "en": "The master of Sky City lays claim to the kings and to Gwyneth herself."
+        },
+        "description": {
+          "en": "The master of Sky City lays claim to the kings and to Gwyneth herself."
+        },
+        "duration": 97
+      },
+      {
+        "title": {
+          "en": "Inside Sector Zero"
+        },
+        "headline": {
+          "en": "Aboard the flying city Gwyneth starts her own game against Victor."
+        },
+        "description": {
+          "en": "Aboard the flying city Gwyneth starts her own game against Victor."
+        },
+        "duration": 96
+      },
+      {
+        "title": {
+          "en": "Hostile Takeover"
+        },
+        "headline": {
+          "en": "The kings wreck Sky City, and the system hack is nearly complete."
+        },
+        "description": {
+          "en": "The kings wreck Sky City, and the system hack is nearly complete."
+        },
+        "duration": 84
+      },
+      {
+        "title": {
+          "en": "Supreme Authority"
+        },
+        "headline": {
+          "en": "Gwyneth tries to seize control before the bomb goes off."
+        },
+        "description": {
+          "en": "Gwyneth tries to seize control before the bomb goes off."
+        },
+        "duration": 89
+      },
+      {
+        "title": {
+          "en": "Queen of the Wasteland"
+        },
+        "headline": {
+          "en": "Coming home, the traitors' fate and Gwyneth's new world."
+        },
+        "description": {
+          "en": "Coming home, the traitors' fate and Gwyneth's new world."
+        },
+        "duration": 134
+      }
+    ]
+  },
+  {
+    "slug": "sold-to-the-alpha-who-swore-to-kill-me",
+    "source": "sold-to-alpha",
+    "rank": 2,
+    "tag": "new",
+    "genre": "romance",
+    "views": 0,
+    "likes": 0,
+    "title": {
+      "id": "Dijual kepada Alpha yang Bersumpah Membunuhku",
+      "es": "Vendida al alfa que juró matarme",
+      "ru": "Проданная альфе, который поклялся меня убить",
+      "en": "Sold to the Alpha Who Swore to Kill Me"
+    },
+    "synopsis": {
+      "en": "Princess Ren spent twelve years starving in a frozen tower. Now her father sells her to an enemy king for peace, and Alpha Cain, who swore to kill her, marries her in nine seconds.",
+      "id": "Putri Ren dua belas tahun kelaparan di menara beku. Kini ayahnya menjualnya kepada raja musuh demi perdamaian, dan Alpha Cain, yang bersumpah membunuhnya, menikahinya dalam sembilan detik.",
+      "es": "La princesa Ren pasó doce años pasando hambre en una torre helada. Ahora su padre la vende a un rey enemigo por la paz, y el alfa Cain, que juró matarla, se casa con ella en nueve segundos.",
+      "ru": "Принцесса Рен двенадцать лет голодала в ледяной башне. Теперь отец продаёт её вражескому королю ради мира, и альфа Кейн, поклявшийся её убить, женится на ней за девять секунд."
+    },
+    "episodes": [
+      {
+        "title": {
+          "en": "The Girl in the Frozen Tower"
+        },
+        "headline": {
+          "en": "Princess Ren has been starved in a tower for twelve years, and her maid urges her to end her life."
+        },
+        "description": {
+          "en": "Princess Ren has been starved in a tower for twelve years, and her maid urges her to end her life."
+        },
+        "duration": 120
+      },
+      {
+        "title": {
+          "en": "Sold as a Peace Offering"
+        },
+        "headline": {
+          "en": "For the first time in nine years her father sends for Ren, to give her to an enemy king for peace."
+        },
+        "description": {
+          "en": "For the first time in nine years her father sends for Ren, to give her to an enemy king for peace."
+        },
+        "duration": 120
+      },
+      {
+        "title": {
+          "en": "Nine-Second Wedding"
+        },
+        "headline": {
+          "en": "The portal breaks Ren, and she is all but dragged to the altar where King Cain, who hates her, is waiting."
+        },
+        "description": {
+          "en": "The portal breaks Ren, and she is all but dragged to the altar where King Cain, who hates her, is waiting."
+        },
+        "duration": 140
+      },
+      {
+        "title": {
+          "en": "The Gold Mark"
+        },
+        "headline": {
+          "en": "Ren's mark burns gold instead of silver, and Cain humiliates her in front of six hundred guests."
+        },
+        "description": {
+          "en": "Ren's mark burns gold instead of silver, and Cain humiliates her in front of six hundred guests."
+        },
+        "duration": 93
+      },
+      {
+        "title": {
+          "en": "Wedding Night Threat"
+        },
+        "headline": {
+          "en": "Cain storms into the bedroom and tells Ren what she will never be to him."
+        },
+        "description": {
+          "en": "Cain storms into the bedroom and tells Ren what she will never be to him."
+        },
+        "duration": 80
+      },
+      {
+        "title": {
+          "en": "Dinner With the Enemy"
+        },
+        "headline": {
+          "en": "Starving Ren sees a real dinner for the first time in years and eats under the king's hateful stare."
+        },
+        "description": {
+          "en": "Starving Ren sees a real dinner for the first time in years and eats under the king's hateful stare."
+        },
+        "duration": 86
+      },
+      {
+        "title": {
+          "en": "A Note Under the Door"
+        },
+        "headline": {
+          "en": "Cain throws Ren out from the table, and at night she learns how rare her gold mark is."
+        },
+        "description": {
+          "en": "Cain throws Ren out from the table, and at night she learns how rare her gold mark is."
+        },
+        "duration": 79
+      },
+      {
+        "title": {
+          "en": "The Curtain Dress"
+        },
+        "headline": {
+          "en": "Ren burns the note, sews a dress from curtains and hides her mark, while the maid Sina starves her."
+        },
+        "description": {
+          "en": "Ren burns the note, sews a dress from curtains and hides her mark, while the maid Sina starves her."
+        },
+        "duration": 116
+      },
+      {
+        "title": {
+          "en": "Moonlight at the Fountain"
+        },
+        "headline": {
+          "en": "Ren sneaks out to the fountain at night, not knowing the king himself is watching from the dark."
+        },
+        "description": {
+          "en": "Ren sneaks out to the fountain at night, not knowing the king himself is watching from the dark."
+        },
+        "duration": 125
+      },
+      {
+        "title": {
+          "en": "The Rival in Red"
+        },
+        "headline": {
+          "en": "A maid lures Ren into the garden, where Cain's former fiancée, Lady Selene Vale, is waiting."
+        },
+        "description": {
+          "en": "A maid lures Ren into the garden, where Cain's former fiancée, Lady Selene Vale, is waiting."
+        },
+        "duration": 98
+      },
+      {
+        "title": {
+          "en": "Silver Thorns"
+        },
+        "headline": {
+          "en": "Ren falls into silver roses, and Selene plays the victim for the king as he rushes in."
+        },
+        "description": {
+          "en": "Ren falls into silver roses, and Selene plays the victim for the king as he rushes in."
+        },
+        "duration": 99
+      },
+      {
+        "title": {
+          "en": "Child, Who Are You?"
+        },
+        "headline": {
+          "en": "Banished from the garden, Ren pulls the silver from her own feet until footsteps stop at her door."
+        },
+        "description": {
+          "en": "Banished from the garden, Ren pulls the silver from her own feet until footsteps stop at her door."
+        },
+        "duration": 97
+      },
+      {
+        "title": {
+          "en": "Moon-Touched"
+        },
+        "headline": {
+          "en": "The healer Bram, who wrote the note, tells Ren the story of the gold mark and Queen Illiana."
+        },
+        "description": {
+          "en": "The healer Bram, who wrote the note, tells Ren the story of the gold mark and Queen Illiana."
+        },
+        "duration": 88
+      },
+      {
+        "title": {
+          "en": "The King's Sentence"
+        },
+        "headline": {
+          "en": "The nobles demand blood for the \"attack\" on Selene, and Cain comes to Ren himself."
+        },
+        "description": {
+          "en": "The nobles demand blood for the \"attack\" on Selene, and Cain comes to Ren himself."
+        },
+        "duration": 87
+      },
+      {
+        "title": {
+          "en": "Exile to the Cottage"
+        },
+        "headline": {
+          "en": "Instead of crying, Ren bargains for food and gets an abandoned cottage at the edge of the estate."
+        },
+        "description": {
+          "en": "Instead of crying, Ren bargains for food and gets an abandoned cottage at the edge of the estate."
+        },
+        "duration": 105
+      },
+      {
+        "title": {
+          "en": "Three Years Forgotten"
+        },
+        "headline": {
+          "en": "Forgotten by everyone, Ren grows a garden, eats her fill for the first time and becomes a woman."
+        },
+        "description": {
+          "en": "Forgotten by everyone, Ren grows a garden, eats her fill for the first time and becomes a woman."
+        },
+        "duration": 103
+      },
+      {
+        "title": {
+          "en": "The Wounded King"
+        },
+        "headline": {
+          "en": "In the forest Ren finds a man bleeding out and recognizes him as her husband."
+        },
+        "description": {
+          "en": "In the forest Ren finds a man bleeding out and recognizes him as her husband."
+        },
+        "duration": 100
+      },
+      {
+        "title": {
+          "en": "He Wakes in Her Bed"
+        },
+        "headline": {
+          "en": "Ren nurses Cain all night, and in the morning he opens his eyes in her bed."
+        },
+        "description": {
+          "en": "Ren nurses Cain all night, and in the morning he opens his eyes in her bed."
+        },
+        "duration": 95
+      },
+      {
+        "title": {
+          "en": "Nobody Ever Came Back"
+        },
+        "headline": {
+          "en": "Cain learns that the servants he assigned to Ren never came to her in three years."
+        },
+        "description": {
+          "en": "Cain learns that the servants he assigned to Ren never came to her in three years."
+        },
+        "duration": 85
+      },
+      {
+        "title": {
+          "en": "His Wolf Speaks"
+        },
+        "headline": {
+          "en": "Cain sees what kept Ren alive and, in a rush of feeling, grabs her wrist."
+        },
+        "description": {
+          "en": "Cain sees what kept Ren alive and, in a rush of feeling, grabs her wrist."
+        },
+        "duration": 116
+      },
+      {
+        "title": {
+          "en": "Bonds Don't Burn Gold"
+        },
+        "headline": {
+          "en": "Cain realizes what a gold bond means and that he kept his moon-chosen mate in a shed for three years."
+        },
+        "description": {
+          "en": "Cain realizes what a gold bond means and that he kept his moon-chosen mate in a shed for three years."
+        },
+        "duration": 99
+      },
+      {
+        "title": {
+          "en": "Someone in the Palace"
+        },
+        "headline": {
+          "en": "Two people broken by the same man finally talk like humans and hunt for a killer."
+        },
+        "description": {
+          "en": "Two people broken by the same man finally talk like humans and hunt for a killer."
+        },
+        "duration": 95
+      },
+      {
+        "title": {
+          "en": "Come Back With Me"
+        },
+        "headline": {
+          "en": "The king stays at the cottage for four days and asks Ren to return to the palace, but she refuses."
+        },
+        "description": {
+          "en": "The king stays at the cottage for four days and asks Ren to return to the palace, but she refuses."
+        },
+        "duration": 101
+      },
+      {
+        "title": {
+          "en": "The Silver Bolt"
+        },
+        "headline": {
+          "en": "Assassins burst into the cottage, Cain turns into a wolf, and Ren shields him from a silver bolt."
+        },
+        "description": {
+          "en": "Assassins burst into the cottage, Cain turns into a wolf, and Ren shields him from a silver bolt."
+        },
+        "duration": 114
+      },
+      {
+        "title": {
+          "en": "Not a Bride, a Curse"
+        },
+        "headline": {
+          "en": "Ren's white wolf tears through the attackers, and the surviving assassin laughs at the king's mark."
+        },
+        "description": {
+          "en": "Ren's white wolf tears through the attackers, and the surviving assassin laughs at the king's mark."
+        },
+        "duration": 135
+      },
+      {
+        "title": {
+          "en": "He Sent You a Knife"
+        },
+        "headline": {
+          "en": "Ren returns to the palace on the royal horse, and Bram studies the Ironmore wedding scroll."
+        },
+        "description": {
+          "en": "Ren returns to the palace on the royal horse, and Bram studies the Ironmore wedding scroll."
+        },
+        "duration": 100
+      },
+      {
+        "title": {
+          "en": "The Duke's Ledger"
+        },
+        "headline": {
+          "en": "Ren understands why her father kept her alive, and Duke Vale demands her execution."
+        },
+        "description": {
+          "en": "Ren understands why her father kept her alive, and Duke Vale demands her execution."
+        },
+        "duration": 113
+      },
+      {
+        "title": {
+          "en": "I Want You"
+        },
+        "headline": {
+          "en": "The Vale plot is exposed, and on the balcony the king kneels and confesses his feelings for the first time."
+        },
+        "description": {
+          "en": "The Vale plot is exposed, and on the balcony the king kneels and confesses his feelings for the first time."
+        },
+        "duration": 115
+      },
+      {
+        "title": {
+          "en": "Seventeen Days"
+        },
+        "headline": {
+          "en": "The king gives Ren the best days of her life and her first kiss, while Bram searches for a cure for the curse."
+        },
+        "description": {
+          "en": "The king gives Ren the best days of her life and her first kiss, while Bram searches for a cure for the curse."
+        },
+        "duration": 149
+      },
+      {
+        "title": {
+          "en": "A Note on His Pillow"
+        },
+        "headline": {
+          "en": "Cain refuses to sacrifice Ren, but she secretly reads the ancient book to the end."
+        },
+        "description": {
+          "en": "Cain refuses to sacrifice Ren, but she secretly reads the ancient book to the end."
+        },
+        "duration": 108
+      },
+      {
+        "title": {
+          "en": "Blood Moon Rising"
+        },
+        "headline": {
+          "en": "In the ancient temple the curse reaches for the king, and Cain bursts in to Ren at the last moment."
+        },
+        "description": {
+          "en": "In the ancient temple the curse reaches for the king, and Cain bursts in to Ren at the last moment."
+        },
+        "duration": 123
+      },
+      {
+        "title": {
+          "en": "Split the Curse"
+        },
+        "headline": {
+          "en": "Cain finds a third way, splitting the curse in two, as the blood moon rises over the temple."
+        },
+        "description": {
+          "en": "Cain finds a third way, splitting the curse in two, as the blood moon rises over the temple."
+        },
+        "duration": 125
+      },
+      {
+        "title": {
+          "en": "The Gold Queen's Justice"
+        },
+        "headline": {
+          "en": "Ren tries to bring Cain back to life, then passes judgment on everyone who betrayed her."
+        },
+        "description": {
+          "en": "Ren tries to bring Cain back to life, then passes judgment on everyone who betrayed her."
+        },
+        "duration": 141
+      },
+      {
+        "title": {
+          "en": "I Should Have Asked to Live"
+        },
+        "headline": {
+          "en": "The queen returns to the same northern tower where she once begged not to die."
+        },
+        "description": {
+          "en": "The queen returns to the same northern tower where she once begged not to die."
+        },
+        "duration": 119
+      }
+    ]
+  },
+  {
+    "slug": "i-will-return",
+    "source": "ya-vernus",
+    "rank": 3,
+    "tag": "new",
+    "genre": "melodrama",
+    "views": 0,
+    "likes": 0,
+    "title": {
+      "id": "Aku Akan Kembali",
+      "en": "I Will Return",
+      "ru": "Я вернусь",
+      "es": "Volveré"
+    },
+    "synopsis": {
+      "en": "Alina sells phones and puts up with her stepmother's jabs until a man with neck tattoos takes her private number. Denis spent eight years in prison, half the city fears him, and the police are already looking for him.",
+      "id": "Alina berjualan HP dan menahan sindiran ibu tirinya, sampai seorang pria bertato di leher meminta nomor pribadinya. Denis pernah delapan tahun di penjara, separuh kota takut padanya, dan polisi sudah mencarinya.",
+      "es": "Alina vende teléfonos y aguanta las pullas de su madrastra, hasta que un hombre con tatuajes en el cuello se lleva su número privado. Denis pasó ocho años en prisión, media ciudad le teme y la policía ya lo busca.",
+      "ru": "Алина продаёт телефоны и терпит упрёки мачехи, пока мужчина с татуировками на шее не уходит с её личным номером. Денис отсидел восемь лет, его боится полгорода, а полиция уже ищет его."
+    },
+    "episodes": [
+      {
+        "title": {
+          "id": "Nomor Pribadi",
+          "en": "Private Number",
+          "ru": "Личный номер",
+          "es": "Número privado"
+        },
+        "headline": {
+          "id": "Dia tak pernah kasih nomornya ke pelanggan. Tapi ke pria ini — dia kasih",
+          "en": "She never gives customers her number. For him, she made an exception",
+          "ru": "Она никогда не даёт клиентам свой номер. Но этому — дала",
+          "es": "Nunca da su número a los clientes. Con él hizo una excepción"
+        },
+        "description": {
+          "id": "Alina penjual HP yang tiap hari menghadapi pelanggan kasar dan ibu tiri yang selalu menyindir. Suatu hari pria bertato di leher datang ke toko dan pulang membawa nomor pribadinya. Malamnya, dia menelepon.",
+          "en": "Alina sells phones, puts up with rude customers and a stepmother who never lets up. Then a man with neck tattoos walks into the shop and leaves with her private number. That night, he calls.",
+          "ru": "Алина продаёт телефоны, терпит хамов и вечные упрёки мачехи. Однажды в салон заходит мужчина с татуировками на шее — и уходит с её личным номером. Вечером он звонит.",
+          "es": "Alina vende teléfonos, aguanta a clientes groseros y a una madrastra que no la deja en paz. Un día entra en la tienda un hombre con tatuajes en el cuello y se va con su número privado. Esa noche, la llama."
+        },
+        "duration": 87
+      },
+      {
+        "title": {
+          "id": "Kopi Tengah Malam",
+          "en": "Midnight Coffee",
+          "ru": "Кофе в полночь",
+          "es": "Café a medianoche"
+        },
+        "headline": {
+          "id": "Dia ajak ngopi jam dua belas malam. Dan dia mau",
+          "en": "He asks her out for coffee at midnight. And she says yes",
+          "ru": "Он зовёт её на кофе в двенадцать ночи. И она выходит",
+          "es": "La invita a un café a medianoche. Y ella acepta"
+        },
+        "description": {
+          "id": "Denis tak sabar menunggu besok dan menjemput Alina tengah malam. Ban bocor, jalan sepi, dan sahabatnya Grisha membuat kencan pertama mereka kacau total.",
+          "en": "Denis can't wait until morning and shows up at Alina's door in the middle of the night. A flat tire, an empty highway and his friend Grisha turn their first date upside down.",
+          "ru": "Денис не может ждать до завтра и приезжает к Алине среди ночи. Пробитое колесо, трасса, его друг Гриша — первое свидание идёт совсем не по плану.",
+          "es": "Denis no puede esperar a la mañana y aparece en la puerta de Alina en plena noche. Una rueda pinchada, una carretera vacía y su amigo Grisha ponen patas arriba su primera cita."
+        },
+        "duration": 112
+      },
+      {
+        "title": {
+          "id": "Kerjamu Apa?",
+          "en": "What Do You Do?",
+          "ru": "Чем ты занимаешься?",
+          "es": "¿A qué te dedicas?"
+        },
+        "headline": {
+          "id": "Ada yang harus kamu tahu tentang aku dari awal",
+          "en": "There's something you should know about me right away",
+          "ru": "«Есть кое-что, что тебе лучше сразу про меня знать»",
+          "es": "Hay algo que debes saber de mí desde ya"
+        },
+        "description": {
+          "id": "Kencan pertama yang aneh tak akan pernah Alina lupakan, dan sahabatnya Vika sudah berkenalan dengan Denis. Di kencan kedua Denis bilang kerjanya di konstruksi. Tapi sepertinya itu bukan seluruh kebenaran.",
+          "en": "Alina will never forget their strange first date, and her friend Vika has already met Denis. On the second date he says he's in construction. But that doesn't seem to be the whole truth.",
+          "ru": "Странное первое свидание Алина запомнит навсегда, а подруга Вика уже познакомилась с Денисом. На втором свидании он говорит, что занимается стройкой. Но, кажется, это не вся правда.",
+          "es": "Alina nunca olvidará su extraña primera cita, y su amiga Vika ya conoce a Denis. En la segunda cita él dice que trabaja en la construcción. Pero no parece toda la verdad."
+        },
+        "duration": 150
+      },
+      {
+        "title": {
+          "id": "Delapan Tahun",
+          "en": "Eight Years",
+          "ru": "Восемь лет",
+          "es": "Ocho años"
+        },
+        "headline": {
+          "id": "Dia kira pria itu mau mengaku punya istri. Ternyata lebih parah",
+          "en": "She thought he'd confess to a wife. The truth was worse",
+          "ru": "Она думала, он скажет про жену. Но правда оказалась хуже",
+          "es": "Creía que confesaría una esposa. La verdad era peor"
+        },
+        "description": {
+          "id": "Denis mengakui masa lalunya, dan Alina tak tahu harus takut atau tidak. Di rumah ibu tiri menyindir soal buket bunga, dan malam di bar berakhir saat seorang pria mengajak Denis keluar.",
+          "en": "Denis confesses his past, and Alina isn't sure whether to be afraid. At home her stepmother sneers at the flowers, and a night out ends with a stranger calling Denis outside.",
+          "ru": "Денис признаётся в своём прошлом, и Алина не знает, бояться ей или нет. Дома мачеха шипит из-за букета, а вечер в баре заканчивается тем, что Дениса зовут «выйти поговорить».",
+          "es": "Denis le cuenta su pasado, y Alina no sabe si tener miedo. En casa, la madrastra se burla de las flores, y una noche de fiesta acaba con un desconocido llamando a Denis afuera."
+        },
+        "duration": 174
+      },
+      {
+        "title": {
+          "id": "Semua Orang Kenal Dia",
+          "en": "Everyone Knows Him",
+          "ru": "Его знает весь город",
+          "es": "Toda la ciudad lo conoce"
+        },
+        "headline": {
+          "id": "Pria kasar itu minta maaf terlalu cepat. Siapa sebenarnya Denis?",
+          "en": "The bully apologized way too fast. Who exactly is Denis?",
+          "ru": "Обидчик извинился подозрительно быстро. Кто же такой Денис?",
+          "es": "El matón se disculpó demasiado rápido. ¿Quién es Denis?"
+        },
+        "description": {
+          "id": "Pria kasar tiba-tiba minta maaf ke Alina, sementara temannya berbisik, \"Kamu tahu siapa yang kamu tantang?\" Denis menggendongnya dan bicara soal pernikahan, tapi telepon tengah malam mengubah segalanya.",
+          "en": "A rude stranger suddenly apologizes to Alina while his friend whispers, \"Do you know who you just picked a fight with?\" Denis carries her in his arms and talks about a wedding, but a late-night call changes everything.",
+          "ru": "Хам вдруг сам извиняется перед Алиной, а его друг шепчет: «Ты в курсе, на кого полез?» Денис носит её на руках, заговаривает о свадьбе — но ночной звонок всё меняет.",
+          "es": "Un desconocido grosero de pronto le pide perdón a Alina mientras su amigo susurra: «¿Sabes con quién te acabas de meter?». Denis la lleva en brazos y habla de boda, pero una llamada nocturna lo cambia todo."
+        },
+        "duration": 124
+      },
+      {
+        "title": {
+          "id": "Berhenti Kerja",
+          "en": "Quit Your Job",
+          "ru": "Увольняйся",
+          "es": "Deja tu trabajo"
+        },
+        "headline": {
+          "id": "Berhenti kerja. Soal uang, biar aku yang urus",
+          "en": "Quit your job. Money is my problem",
+          "ru": "«Увольняйся. На что жить — моя забота»",
+          "es": "Deja tu trabajo. El dinero es cosa mía"
+        },
+        "description": {
+          "id": "Denis meminta Alina berhenti kerja dan pergi bersamanya ke mana saja. Hadiah, laut, obrolan soal anak dan pernikahan. Tapi dari mana \"kontraktor\" punya uang sebanyak itu, dan kenapa dia terus menjauh untuk menerima telepon?",
+          "en": "Denis asks Alina to quit and run away with him, wherever the road leads. Gifts, the sea, talk of children and a wedding. But where does a \"builder\" get that kind of money, and why does he keep stepping away to take calls?",
+          "ru": "Денис просит Алину бросить работу и уехать с ним куда глаза глядят. Подарки, море, разговоры о детях и свадьбе. Но откуда у «строителя» столько денег и почему он всё время уходит на звонки?",
+          "es": "Denis le pide a Alina que lo deje todo y se vaya con él, adonde los lleve el camino. Regalos, el mar, hablar de hijos y de boda. Pero ¿de dónde saca tanto dinero un «constructor» y por qué siempre se aparta para atender llamadas?"
+        },
+        "duration": 121
+      },
+      {
+        "title": {
+          "id": "Pistol",
+          "en": "The Gun",
+          "ru": "Пистолет",
+          "es": "La pistola"
+        },
+        "headline": {
+          "id": "Dia menemukan pistol — dan menuntut kebenaran",
+          "en": "She found a gun in his hands and demanded the truth",
+          "ru": "Она нашла у него пистолет — и потребовала правды",
+          "es": "Encontró una pistola en sus manos y exigió la verdad"
+        },
+        "description": {
+          "id": "Telepon berjam-jam, pindah mendadak, dan sekarang senjata. Untuk pertama kalinya Denis menceritakan kenapa dia dipenjara, lalu mengajari Alina menembak. Lalu ponselnya berdering, dan dia pergi \"sebentar saja\".",
+          "en": "Hours-long calls, a sudden move, and now a weapon. For the first time Denis tells her why he went to prison, then teaches Alina to shoot. Then his phone rings, and he leaves \"just for a bit\".",
+          "ru": "Звонки часами, внезапный переезд, а теперь оружие. Денис впервые рассказывает, за что сидел, и учит Алину стрелять. А потом ему звонят, и он уезжает «ненадолго».",
+          "es": "Llamadas de horas, una mudanza repentina y ahora un arma. Por primera vez Denis le cuenta por qué estuvo en prisión y le enseña a disparar. Entonces suena su teléfono y se va «solo un momento»."
+        },
+        "duration": 150
+      },
+      {
+        "title": {
+          "id": "Polisi di Depan Pintu",
+          "en": "Police at the Door",
+          "ru": "Полиция у двери",
+          "es": "La policía en la puerta"
+        },
+        "headline": {
+          "id": "Kenal pria ini? Polisi menunjukkan foto Denis",
+          "en": "Do you know this man? The police are holding Denis's photo",
+          "ru": "«Этого мужчину знаете?» — полиция показывает фото Дениса",
+          "es": "¿Conoce a este hombre? La policía tiene la foto de Denis"
+        },
+        "description": {
+          "id": "Denis menghilang dua hari, polisi datang ke rumah-rumah, dan ayahnya menyuruh Alina pulang. Saat Denis akhirnya muncul, Alina tak mau diam lagi.",
+          "en": "Denis has been gone for two days, the police are going door to door, and her father wants Alina home. When Denis finally shows up, she's done keeping quiet.",
+          "ru": "Денис пропал на два дня, полиция ходит по домам, а отец требует, чтобы Алина вернулась. Когда Денис наконец появляется, она больше не готова молчать.",
+          "es": "Denis lleva dos días desaparecido, la policía va puerta por puerta y su padre quiere a Alina en casa. Cuando Denis por fin aparece, ella ya no piensa callarse."
+        },
+        "duration": 126
+      },
+      {
+        "title": {
+          "id": "Hadiah Perpisahan",
+          "en": "A Parting Gift",
+          "ru": "Подарок перед отъездом",
+          "es": "Un regalo de despedida"
+        },
+        "headline": {
+          "id": "Dia menghadiahkan mobil, lalu bilang harus pergi",
+          "en": "He gives her a car, then says he has to leave",
+          "ru": "Он дарит ей машину — и тут же говорит, что должен уехать",
+          "es": "Le regala un coche y luego dice que tiene que irse"
+        },
+        "description": {
+          "id": "Denis meminta Alina tinggal di rumah ayahnya selama polisi memburunya. Sendirian, Alina ribut di jalan dengan pengemudi ngotot yang memanggil polisi lalu lintas. Tapi pengaruh Denis sampai ke mana-mana.",
+          "en": "Denis asks Alina to stay with her father while the police are after him. Alone, she gets into a road fight with a pushy driver who calls the traffic cops. But Denis has a long reach.",
+          "ru": "Денис просит Алину пожить у отца, пока его ищет полиция. Оставшись одна, она попадает в дорожный конфликт с настырным водителем, который вызывает ДПС. Но у Дениса длинные руки.",
+          "es": "Denis le pide a Alina que se quede con su padre mientras la policía lo busca. Sola, se enzarza en una pelea de tráfico con un conductor insistente que llama a la policía. Pero Denis tiene el brazo largo."
+        },
+        "duration": 179
+      },
+      {
+        "title": {
+          "id": "Mobil Berisi Uang",
+          "en": "Car Full of Cash",
+          "ru": "Машина с деньгами",
+          "es": "Un coche lleno de dinero"
+        },
+        "headline": {
+          "id": "Ada mobil berisi uang. Sekarang itu milikmu",
+          "en": "There's a car with money in it. It's yours now",
+          "ru": "«Там машина с деньгами. Теперь они твои»",
+          "es": "Hay un coche con dinero dentro. Ahora es tuyo"
+        },
+        "description": {
+          "id": "Seseorang mengempeskan ban mobil Alina, dan anak buah Denis memburu pelakunya. Denis sendiri sulit dihubungi, lalu tengah malam mengirim alamat mobil berisi uang. Kedengarannya seperti perpisahan.",
+          "en": "Someone slashes Alina's tires, and Denis's people track the guy down. Denis himself won't pick up, then sends her the address of a car full of money in the middle of the night. It sounds like goodbye.",
+          "ru": "Кто-то прокалывает Алине колёса, а люди Дениса находят обидчика. Сам он не отвечает на звонки, а ночью присылает адрес машины с деньгами. Звучит так, будто он прощается.",
+          "es": "Alguien le raja las ruedas a Alina, y la gente de Denis encuentra al culpable. Denis no contesta, y en plena noche le manda la dirección de un coche lleno de dinero. Suena a despedida."
+        },
+        "duration": 171
+      },
+      {
+        "title": {
+          "id": "Pengkhianatan",
+          "en": "Betrayal",
+          "ru": "Предательство",
+          "es": "Traición"
+        },
+        "headline": {
+          "id": "Aku nggak kenal Denis, kata sahabatnya sendiri",
+          "en": "I don't know any Denis, says his best friend",
+          "ru": "«Я не знаю никакого Дениса», — говорит его лучший друг",
+          "es": "No conozco a ningún Denis, dice su mejor amigo"
+        },
+        "description": {
+          "id": "Grisha bersumpah membantu Denis, tapi kini pura-pura tak mengenalnya. Seminggu tanpa kabar, dan ibu tiri terus bilang Denis tak akan kembali. Lalu ada telepon dari nomor tak dikenal.",
+          "en": "Grisha swore to help Denis, and now he pretends they've never met. A week passes without a word, and her stepmother insists he's never coming back. Then a call comes from an unknown number.",
+          "ru": "Гриша клялся Денису помочь, а теперь делает вид, что не знает его. Прошла неделя без вестей, мачеха твердит, что он не вернётся. И вдруг звонок с неизвестного номера.",
+          "es": "Grisha juró ayudar a Denis, y ahora finge no haberlo visto nunca. Pasa una semana sin noticias y la madrastra insiste en que no volverá. Entonces llega una llamada de un número desconocido."
+        },
+        "duration": 141
+      },
+      {
+        "title": {
+          "id": "Kini Kami Berdua",
+          "en": "Now We're Two",
+          "ru": "Нас теперь двое",
+          "es": "Ahora somos dos"
+        },
+        "headline": {
+          "id": "Semua orang bilang kamu ninggalin aku",
+          "en": "Everyone says you left me",
+          "ru": "«Все говорят, что ты меня бросил»",
+          "es": "Todos dicen que me abandonaste"
+        },
+        "description": {
+          "id": "Denis berjanji menjemput Alina, tapi ada keributan di telepon, lalu sunyi. Di rumah dia disebut perempuan yang ditinggal, dan ayahnya memberi ultimatum. Alina mulai kerja dan terus menunggu.",
+          "en": "Denis promises to come for Alina, but there's noise on the line, then silence. At home they call her abandoned, and her father gives her an ultimatum. Alina takes a new job and keeps waiting.",
+          "ru": "Денис обещает забрать Алину, но в трубке шум, а потом — тишина. Дома её называют брошенной, отец ставит ультиматум. Алина устраивается на работу и ждёт.",
+          "es": "Denis promete venir a por Alina, pero hay ruido en la línea y luego silencio. En casa la llaman abandonada y su padre le da un ultimátum. Alina consigue un nuevo trabajo y sigue esperando."
+        },
+        "duration": 176
+      },
+      {
+        "title": {
+          "id": "Aku di Luar Negeri",
+          "en": "I'm Abroad",
+          "ru": "Я за границей",
+          "es": "Estoy en el extranjero"
+        },
+        "headline": {
+          "id": "Sendirian, hamil, naik lima lantai tanpa lift. Dan dia tak kunjung datang",
+          "en": "Alone, pregnant, five floors up with no elevator. And still no him",
+          "ru": "Одна, беременная, на пятом этаже без лифта. А его всё нет",
+          "es": "Sola, embarazada, un quinto piso sin ascensor. Y él sigue sin aparecer"
+        },
+        "description": {
+          "id": "Alina menyewa kamar kecil sendirian, bekerja, dan menghitung setiap rupiah. Rasa takut berubah jadi marah. Dia teringat hari terakhir bersama Denis dan benda yang harus dia buka jika Denis menghilang.",
+          "en": "Alina rents a tiny flat alone, works and counts every penny. Fear turns into anger. She remembers her last day with Denis and what he told her to open if he ever went silent.",
+          "ru": "Алина одна снимает квартиру, работает и считает каждую копейку. Страх сменяется злостью. Она вспоминает последний день с Денисом и то, что он велел открыть, если пропадёт.",
+          "es": "Alina alquila sola un piso diminuto, trabaja y cuenta cada céntimo. El miedo se vuelve rabia. Recuerda su último día con Denis y lo que él le dijo que abriera si un día dejaba de dar señales."
+        },
+        "duration": 191
+      },
+      {
+        "title": {
+          "id": "Aku Akan Kembali",
+          "en": "I Will Return",
+          "ru": "Я вернусь",
+          "es": "Volveré"
+        },
+        "headline": {
+          "id": "Lebih baik kamu membenciku. Asal hidupmu tenang",
+          "en": "Better you hate me. Just live in peace",
+          "ru": "«Лучше ненавидь меня. Только живи спокойно»",
+          "es": "Mejor que me odies. Pero vive en paz"
+        },
+        "description": {
+          "id": "Alina mencari siapa pun yang tahu apakah Denis masih hidup. Akhirnya dia mendengar hal yang tak pernah sanggup Denis katakan langsung. Episode terakhir kisah cinta yang tak lelah menunggu.",
+          "en": "Alina searches for anyone who knows whether Denis is still alive. At last she hears what he could never say to her face. The finale of a love story that knows how to wait.",
+          "ru": "Алина ищет хоть кого-то, кто знает, жив ли Денис. И наконец слышит то, что он не мог сказать ей вслух. Финал истории о любви, которая умеет ждать.",
+          "es": "Alina busca a alguien que sepa si Denis sigue vivo. Por fin escucha lo que él nunca pudo decirle a la cara. El final de una historia de amor que sabe esperar."
+        },
+        "duration": 223
+      }
+    ]
+  },
+  {
+    "slug": "mafia-don-hired-me-as-his-wife",
+    "source": "mafia-don",
+    "rank": 4,
+    "tag": "new",
+    "genre": "romance",
+    "views": 0,
+    "likes": 0,
+    "title": {
+      "id": "Bos Mafia Menikahiku sebagai Istri Sewaan",
+      "en": "The Mafia Don Hired Me as His Wife",
+      "ru": "Дон мафии нанял меня в жёны",
+      "es": "El capo de la mafia me contrató como esposa"
+    },
+    "synopsis": {
+      "en": "Thrown out by her husband with $36, Nora answers a strange ad and becomes the contract wife of a mafia don and the mother of his little son. One rule: never go up to the third floor.",
+      "id": "Diusir suaminya hanya dengan $36, Nora membalas iklan aneh dan menjadi istri kontrak seorang bos mafia sekaligus ibu bagi putra kecilnya. Satu aturan: jangan pernah naik ke lantai tiga.",
+      "es": "Echada por su marido con 36 dólares, Nora responde a un anuncio extraño y se convierte en la esposa por contrato de un capo de la mafia y en la madre de su hijo pequeño. Una sola regla: nunca subir al tercer piso.",
+      "ru": "Муж выгнал Нору с 36 долларами, она откликается на странное объявление и становится женой по контракту для дона мафии и мамой его маленькому сыну. Одно правило: никогда не подниматься на третий этаж."
+    },
+    "episodes": [
+      {
+        "title": {
+          "id": "Dicari: Ibu Tiri",
+          "en": "Wanted: Stepmother",
+          "ru": "Требуется мачеха",
+          "es": "Se busca madrastra"
+        },
+        "headline": {
+          "id": "Diusir cuma bawa $36 — lalu dia membalas iklan seorang bos mafia",
+          "en": "Thrown out with $36 — then she answers a mafia don's ad",
+          "ru": "Выгнали с 36 долларами — и она откликается на объявление дона мафии",
+          "es": "Echada con 36 dólares, responde al anuncio de un capo de la mafia"
+        },
+        "description": {
+          "id": "Suaminya mengusir Nora dengan hinaan \"gendut dan nggak berguna\". Sebuah iklan aneh — \"Dicari: Ibu Tiri\" — membawanya ke sebuah mansion, tempat bos mafia sedang mencari ibu untuk putranya.",
+          "en": "Her husband throws Nora out as \"fat and useless\". A strange ad — \"Wanted: Stepmother\" — leads her to a mansion where a mafia don is casting a mother for his son.",
+          "ru": "Муж выгоняет Нору «толстой и никчёмной». Странное объявление «Требуется мачеха» приводит её в особняк, где дон мафии выбирает мать для сына.",
+          "es": "Su marido echa a Nora llamándola «gorda e inútil». Un anuncio extraño, «Se busca madrastra», la lleva a una mansión donde un capo de la mafia busca una madre para su hijo."
+        },
+        "duration": 144
+      },
+      {
+        "title": {
+          "id": "Satu Suap Saja",
+          "en": "Just One Bite",
+          "ru": "Всего одну ложку",
+          "es": "Solo una cucharada"
+        },
+        "headline": {
+          "id": "Bocah itu teriak dia gendut dan jelek. Dia cuma punya satu kesempatan",
+          "en": "The boy screams she's fat and ugly. She has one chance",
+          "ru": "Мальчик кричит, что она толстая уродина. У неё один шанс",
+          "es": "El niño le grita que es gorda y fea. Tiene una sola oportunidad"
+        },
+        "description": {
+          "id": "Leo kecil menolak makan dan menghina Nora. Nora mengubah makan malam jadi permainan bersama boneka kesatrianya — dan sang bos dingin ikut bermain. Lalu dia berkata: ayo bicarakan pernikahan.",
+          "en": "Little Leo refuses to eat and insults Nora. She turns dinner into a game with his knight doll — and the cold don plays along. Then he says: let's discuss a marriage.",
+          "ru": "Маленький Лео отказывается есть и оскорбляет Нору. Она превращает ужин в игру с куклой-рыцарем — и холодный дон подыгрывает. А потом говорит: обсудим брак.",
+          "es": "El pequeño Leo se niega a comer e insulta a Nora. Ella convierte la cena en un juego con su muñeco caballero, y el frío capo le sigue el juego. Luego dice: hablemos de un matrimonio."
+        },
+        "duration": 125
+      },
+      {
+        "title": {
+          "id": "Lantai Tiga",
+          "en": "The Third Floor",
+          "ru": "Третий этаж",
+          "es": "El tercer piso"
+        },
+        "headline": {
+          "id": "Jangan pernah naik ke lantai tiga",
+          "en": "Never go up to the third floor",
+          "ru": "Никогда не поднимайтесь на третий этаж",
+          "es": "Nunca subas al tercer piso"
+        },
+        "description": {
+          "id": "Pernikahan kontrak: $100.000 sebulan, beda lantai, tanpa banyak tanya. Dan satu aturan — jangan pernah naik ke lantai tiga.",
+          "en": "A contract marriage: $100,000 a month, separate floors, no questions. And one rule — never go up to the third floor.",
+          "ru": "Брак по контракту: 100 000 долларов в месяц, раздельные этажи, никаких вопросов. И одно правило — никогда не подниматься на третий этаж.",
+          "es": "Un matrimonio por contrato: 100.000 dólares al mes, pisos separados, sin preguntas. Y una regla: nunca subir al tercer piso."
+        },
+        "duration": 153
+      },
+      {
+        "title": {
+          "id": "Nyonya Castellano",
+          "en": "Mrs. Castellano",
+          "ru": "Миссис Кастеллано",
+          "es": "La señora Castellano"
+        },
+        "headline": {
+          "id": "Tiga hari setelah cerai, dia sudah menikah lagi",
+          "en": "Three days after the divorce she was married again",
+          "ru": "Через три дня после развода она снова вышла замуж",
+          "es": "Tres días después del divorcio, ya estaba casada otra vez"
+        },
+        "description": {
+          "id": "Tanpa pesta, hanya cincin keluarga. Malam hari Leo menyelinap ke kamar Nora minta didongengkan — dan ayahnya mengintip dari pintu.",
+          "en": "No wedding, just a family ring. At night Leo sneaks into Nora's room for a bedtime story — and his father watches from the door.",
+          "ru": "Ни свадьбы, только фамильное кольцо. Ночью Лео пробирается к Норе за сказкой — а отец смотрит из-за двери.",
+          "es": "Sin boda, solo un anillo familiar. Por la noche Leo se cuela en el cuarto de Nora para oír un cuento, y su padre los observa desde la puerta."
+        },
+        "duration": 107
+      },
+      {
+        "title": {
+          "id": "Dua Bulan",
+          "en": "Two Months",
+          "ru": "Два месяца",
+          "es": "Dos meses"
+        },
+        "headline": {
+          "id": "Dia pergi berperang. Dia tinggal bersama putranya",
+          "en": "He leaves for war. She stays with his son",
+          "ru": "Он уезжает на войну. Она остаётся с его сыном",
+          "es": "Él se va a la guerra. Ella se queda con su hijo"
+        },
+        "description": {
+          "id": "Luca menaikkan bayaran Nora dan pergi ke luar negeri selama dua bulan. Leo menangis; Nora berjanji menggambar perisai di kalender setiap hari.",
+          "en": "Luca raises her pay and leaves overseas for two months. Leo cries; Nora promises to draw a shield on the calendar for every day.",
+          "ru": "Лука повышает ей плату и уезжает за границу на два месяца. Лео плачет, а Нора обещает рисовать щит на календаре за каждый день.",
+          "es": "Luca le sube el sueldo y se marcha al extranjero dos meses. Leo llora; Nora le promete dibujar un escudo en el calendario por cada día."
+        },
+        "duration": 134
+      },
+      {
+        "title": {
+          "id": "Bayangan Kecil",
+          "en": "Little Shadow",
+          "ru": "Маленькая тень",
+          "es": "Pequeña sombra"
+        },
+        "headline": {
+          "id": "Saat dia bertarung di luar negeri, dia berjuang untuk dirinya sendiri",
+          "en": "While he fights abroad, she fights for herself",
+          "ru": "Пока он воюет, она борется за себя",
+          "es": "Mientras él lucha fuera, ella lucha por sí misma"
+        },
+        "description": {
+          "id": "Leo mengikuti Nora ke mana pun. Dua bulan olahraga, terapi, dan air mata — dan tubuh yang tak lagi dia sembunyikan.",
+          "en": "Leo follows Nora everywhere. Two months of sport, therapy and tears — and a body she no longer hides.",
+          "ru": "Лео ходит за Норой по пятам. Два месяца спорта, терапии и слёз — и тело, которое она больше не прячет.",
+          "es": "Leo sigue a Nora a todas partes. Dos meses de deporte, terapia y lágrimas, y un cuerpo que ya no esconde."
+        },
+        "duration": 72
+      },
+      {
+        "title": {
+          "id": "Langkah Pertama Keluar",
+          "en": "First Step Outside",
+          "ru": "Первый шаг за ворота",
+          "es": "El primer paso fuera"
+        },
+        "headline": {
+          "id": "Untuk pertama kalinya Leo keluar dari mansion",
+          "en": "For the first time Leo leaves the mansion",
+          "ru": "Лео впервые выходит из особняка",
+          "es": "Por primera vez Leo sale de la mansión"
+        },
+        "description": {
+          "id": "Nora mengajak Leo ke rumah sakit — pertama kalinya dia keluar sejak penculikan. Kenangan tentang keluarga mantan suaminya kembali. Lalu Luca pulang.",
+          "en": "Nora takes Leo to the hospital — his first trip outside since the kidnapping. Memories of her ex's family return. And then Luca comes home.",
+          "ru": "Нора везёт Лео в больницу — впервые после похищения он покидает дом. Возвращаются воспоминания о семье бывшего. А потом домой приезжает Лука.",
+          "es": "Nora lleva a Leo al hospital, su primera salida desde el secuestro. Vuelven los recuerdos de la familia de su ex. Y entonces Luca regresa."
+        },
+        "duration": 152
+      },
+      {
+        "title": {
+          "id": "Nora?",
+          "en": "Nora?",
+          "ru": "Нора?",
+          "es": "¿Nora?"
+        },
+        "headline": {
+          "id": "Dia nggak mengenali istrinya sendiri",
+          "en": "He doesn't recognize his own wife",
+          "ru": "Он не узнаёт собственную жену",
+          "es": "No reconoce a su propia esposa"
+        },
+        "description": {
+          "id": "Luca pulang dan tak percaya wanita di depannya adalah Nora. Leo punya protes: Papa ingkar janji.",
+          "en": "Luca comes back and can't believe the woman in front of him is Nora. Leo has a complaint: Daddy broke his promise.",
+          "ru": "Лука возвращается и не верит, что перед ним Нора. А у Лео претензия: папа нарушил обещание.",
+          "es": "Luca vuelve y no puede creer que la mujer que tiene delante sea Nora. Leo tiene una queja: papá rompió su promesa."
+        },
+        "duration": 57
+      },
+      {
+        "title": {
+          "id": "Kartu Hitam",
+          "en": "The Black Card",
+          "ru": "Чёрная карта",
+          "es": "La tarjeta negra"
+        },
+        "headline": {
+          "id": "Dia menawarkan kartu hitam. Dia malah minta mobil bekas",
+          "en": "He offers her a black card. She asks for a used car",
+          "ru": "Он предлагает чёрную карту. Она просит подержанную машину",
+          "es": "Le ofrece una tarjeta negra. Ella pide un coche usado"
+        },
+        "description": {
+          "id": "Luca terpikat istri barunya. Dia menawarkan uang tanpa batas — Nora cuma mau mobil di bawah $5.000. Luca mengajaknya ke garasi.",
+          "en": "Luca is distracted by his new wife. He offers unlimited money — she wants a car under $5,000. He leads her to the garage.",
+          "ru": "Лука не может отвести глаз от новой жены. Он предлагает любые деньги — а она хочет машину до 5000 долларов. И он ведёт её в гараж.",
+          "es": "Luca no puede dejar de mirar a su nueva esposa. Le ofrece dinero sin límite; ella quiere un coche de menos de 5.000 dólares. Él la lleva al garaje."
+        },
+        "duration": 100
+      },
+      {
+        "title": {
+          "id": "Garasi",
+          "en": "The Garage",
+          "ru": "Гараж",
+          "es": "El garaje"
+        },
+        "headline": {
+          "id": "Garasi penuh mobil sport mewah — dan dia menolak",
+          "en": "A garage full of supercars — and she says no",
+          "ru": "Гараж суперкаров — и она говорит «нет»",
+          "es": "Un garaje lleno de superdeportivos, y ella dice que no"
+        },
+        "description": {
+          "id": "Nora menolak semua supercar. Paginya sebuah sedan seharga $4.800 sudah menunggunya — juga psikiater yang didatangkan Luca untuknya.",
+          "en": "Nora refuses the supercars. In the morning a $4,800 sedan waits for her — and a psychiatrist Luca brought for her.",
+          "ru": "Нора отказывается от суперкаров. Утром её ждёт седан за 4800 долларов — и психиатр, которого привёз Лука.",
+          "es": "Nora rechaza los superdeportivos. Por la mañana la espera un sedán de 4.800 dólares, y una psiquiatra que Luca ha traído para ella."
+        },
+        "duration": 121
+      },
+      {
+        "title": {
+          "id": "Happy Kingdom",
+          "en": "Happy Kingdom",
+          "ru": "Счастливое королевство",
+          "es": "Reino Feliz"
+        },
+        "headline": {
+          "id": "Foto pertama bersama Mama",
+          "en": "The first photo with mom",
+          "ru": "Первое фото с мамой",
+          "es": "La primera foto con mamá"
+        },
+        "description": {
+          "id": "Nora mengajak Leo ke taman hiburan. Foto pertama mereka berdua akhirnya terpajang di samping tempat tidur ayahnya.",
+          "en": "Nora takes Leo to an amusement park. Their first photo together ends up next to his father's bed.",
+          "ru": "Нора ведёт Лео в парк аттракционов. Их первое общее фото оказывается у кровати его отца.",
+          "es": "Nora lleva a Leo a un parque de atracciones. Su primera foto juntos acaba junto a la cama de su padre."
+        },
+        "duration": 70
+      },
+      {
+        "title": {
+          "id": "Pasar",
+          "en": "The Market",
+          "ru": "Рынок",
+          "es": "El mercado"
+        },
+        "headline": {
+          "id": "Dia bertemu mantan suaminya",
+          "en": "She runs into her ex",
+          "ru": "Она сталкивается с бывшим",
+          "es": "Se encuentra con su ex"
+        },
+        "description": {
+          "id": "Pelajaran soal lobster di pasar — dan tiba-tiba Sebastian berdiri di depannya.",
+          "en": "A lesson about lobsters at the market — and suddenly Sebastian is standing in front of her.",
+          "ru": "Урок про омаров на рынке — и вдруг перед ней Себастьян.",
+          "es": "Una lección sobre langostas en el mercado, y de pronto Sebastian está delante de ella."
+        },
+        "duration": 67
+      },
+      {
+        "title": {
+          "id": "Benarkah Itu Kamu?",
+          "en": "Is That Really You?",
+          "ru": "Это правда ты?",
+          "es": "¿De verdad eres tú?"
+        },
+        "headline": {
+          "id": "Mantannya ingin dia kembali",
+          "en": "Her ex wants her back",
+          "ru": "Бывший хочет её вернуть",
+          "es": "Su ex la quiere de vuelta"
+        },
+        "description": {
+          "id": "Kilas balik pernikahan yang merenggut segalanya darinya. Kini Sebastian mengajak \"baikan\".",
+          "en": "Flashbacks of a marriage that took everything from her. Now Sebastian suggests they \"make up\".",
+          "ru": "Воспоминания о браке, который отнял у неё всё. А теперь Себастьян предлагает «помириться».",
+          "es": "Recuerdos de un matrimonio que se lo quitó todo. Ahora Sebastian le propone «hacer las paces»."
+        },
+        "duration": 140
+      },
+      {
+        "title": {
+          "id": "Mamaku Mau Bicara",
+          "en": "My Mom Wants to Talk",
+          "ru": "Мама хочет поговорить",
+          "es": "Mi mamá quiere hablar"
+        },
+        "headline": {
+          "id": "Dia menolak mantannya — kini giliran keluarganya",
+          "en": "She turns her ex down — his family is next",
+          "ru": "Она отшивает бывшего — следующая его семья",
+          "es": "Rechaza a su ex; ahora va su familia"
+        },
+        "description": {
+          "id": "Nora menolak Sebastian mentah-mentah. Lalu keponakannya, Connor, menghampiri: mamaku mau bicara denganmu.",
+          "en": "Nora shuts Sebastian down. Then his nephew Connor comes up: my mom wants to talk to you.",
+          "ru": "Нора ставит Себастьяна на место. И тут подходит его племянник Коннор: моя мама хочет с тобой поговорить.",
+          "es": "Nora le para los pies a Sebastian. Entonces se acerca su sobrino Connor: mi mamá quiere hablar contigo."
+        },
+        "duration": 70
+      },
+      {
+        "title": {
+          "id": "Menangislah Saja",
+          "en": "Go Ahead and Cry",
+          "ru": "Поплачь",
+          "es": "Llora si quieres"
+        },
+        "headline": {
+          "id": "Kakak mantannya menelepon untuk mempermalukannya",
+          "en": "His sister calls to humiliate her",
+          "ru": "Его сестра звонит, чтобы унизить её",
+          "es": "La hermana de él llama para humillarla"
+        },
+        "description": {
+          "id": "Kakak Sebastian mengejek Nora yang kini jadi \"pengasuh\". Di mobil, Leo menghiburnya dengan janji kelingking.",
+          "en": "Sebastian's sister mocks Nora for becoming a \"nanny\". In the car Leo comforts her with a pinky promise.",
+          "ru": "Сестра Себастьяна высмеивает Нору за работу «нянькой». В машине Лео утешает её клятвой на мизинчиках.",
+          "es": "La hermana de Sebastian se burla de Nora por haberse vuelto «niñera». En el coche, Leo la consuela con una promesa de meñique."
+        },
+        "duration": 76
+      },
+      {
+        "title": {
+          "id": "Susu Hangat",
+          "en": "Warm Milk",
+          "ru": "Тёплое молоко",
+          "es": "Leche caliente"
+        },
+        "headline": {
+          "id": "Dia ingin mengajaknya — dia menolak",
+          "en": "He wanted to invite her — she said no",
+          "ru": "Он хотел её пригласить — она отказалась",
+          "es": "Quería invitarla y ella dijo que no"
+        },
+        "description": {
+          "id": "Luca datang ke kamar Nora, tapi Nora menolak gaun-gaun itu: \"Aku cuma pengasuh premium\". Kepala pelayan langsung paham apa yang sebenarnya diinginkan bosnya.",
+          "en": "Luca comes to Nora's room, she refuses the dresses: \"I'm just a premium nanny\". The butler figures out what his boss really wanted.",
+          "ru": "Лука приходит к Норе, она отказывается от платьев: «Я всего лишь няня класса люкс». Дворецкий понимает, чего на самом деле хотел хозяин.",
+          "es": "Luca va al cuarto de Nora; ella rechaza los vestidos: «Solo soy una niñera de lujo». El mayordomo entiende lo que su jefe quería de verdad."
+        },
+        "duration": 109
+      },
+      {
+        "title": {
+          "id": "Pasangan Pesta",
+          "en": "Plus One",
+          "ru": "Плюс один",
+          "es": "Acompañante"
+        },
+        "headline": {
+          "id": "Undangan ke gala — tapi dibayar",
+          "en": "An invitation to the gala — for a fee",
+          "ru": "Приглашение на приём — за плату",
+          "es": "Una invitación a la gala, con pago incluido"
+        },
+        "description": {
+          "id": "Luca pulang makin lama makin cepat. Dia mengajak Nora ke gala sebagai pendamping bayaran. Hinaan ibu mantan suaminya kembali terngiang.",
+          "en": "Luca comes home earlier and earlier. He invites Nora to a gala as his paid plus-one. Her ex's mother's insults come back.",
+          "ru": "Лука возвращается домой всё раньше. Он зовёт Нору на приём как платную спутницу. И вспоминаются унижения от свекрови.",
+          "es": "Luca vuelve a casa cada vez más temprano. Invita a Nora a una gala como su acompañante pagada. Vuelven los insultos de la madre de su ex."
+        },
+        "duration": 119
+      },
+      {
+        "title": {
+          "id": "Tangga",
+          "en": "The Staircase",
+          "ru": "Лестница",
+          "es": "La escalera"
+        },
+        "headline": {
+          "id": "Cuma satu malam gala",
+          "en": "It's just one gala",
+          "ru": "Всего один вечер",
+          "es": "Es solo una gala"
+        },
+        "description": {
+          "id": "Penata gaya, perhiasan, dan gaun — lalu Nora menuruni tangga. Luca tak bisa berpaling.",
+          "en": "Stylists, jewels and a dress — and Nora walks down the staircase. Luca can't look away.",
+          "ru": "Стилисты, украшения, платье — и Нора спускается по лестнице. Лука не может отвести взгляд.",
+          "es": "Estilistas, joyas y un vestido, y Nora baja la escalera. Luca no puede apartar la mirada."
+        },
+        "duration": 50
+      },
+      {
+        "title": {
+          "id": "Malam Gala",
+          "en": "The Gala",
+          "ru": "Приём",
+          "es": "La gala"
+        },
+        "headline": {
+          "id": "Dia memperkenalkannya sebagai istrinya",
+          "en": "He introduces her as his wife",
+          "ru": "Он представляет её как жену",
+          "es": "La presenta como su esposa"
+        },
+        "description": {
+          "id": "Di gala, Luca memperkenalkan Nora sebagai Nyonya Castellano. Lalu Sebastian masuk.",
+          "en": "At the gala Luca presents Nora as Mrs. Castellano. And Sebastian walks in.",
+          "ru": "На приёме Лука называет Нору миссис Кастеллано. И входит Себастьян.",
+          "es": "En la gala, Luca presenta a Nora como la señora Castellano. Y entra Sebastian."
+        },
+        "duration": 93
+      },
+      {
+        "title": {
+          "id": "Sampah Tetaplah Sampah",
+          "en": "Trash Is Still Trash",
+          "ru": "Мусор остаётся мусором",
+          "es": "La basura sigue siendo basura"
+        },
+        "headline": {
+          "id": "Mantannya mempermalukannya di depan sang bos mafia",
+          "en": "Her ex humiliates her in front of the don",
+          "ru": "Бывший унижает её перед доном",
+          "es": "Su ex la humilla delante del capo"
+        },
+        "description": {
+          "id": "Sebastian menjilat Luca dan menghina Nora. Luca: \"Keputusan ada di tanganmu\". Nora membalas dengan kata-katanya sendiri.",
+          "en": "Sebastian fawns over Luca and insults Nora. Luca: \"It's your call\". Nora answers with his own words.",
+          "ru": "Себастьян лебезит перед Лукой и оскорбляет Нору. Лука: «Решать тебе». И Нора отвечает его же словами.",
+          "es": "Sebastian adula a Luca e insulta a Nora. Luca: «Tú decides». Nora le responde con sus propias palabras."
+        },
+        "duration": 85
+      },
+      {
+        "title": {
+          "en": "Ten Million for Her"
+        },
+        "headline": {
+          "en": "Luca destroys the man who hurt Nora, and at the auction he notices she liked a necklace."
+        },
+        "description": {
+          "en": "Luca destroys the man who hurt Nora, and at the auction he notices she liked a necklace."
+        },
+        "duration": 85
+      },
+      {
+        "title": {
+          "en": "Not Just for Show"
+        },
+        "headline": {
+          "en": "After the auction Nora thanks Luca, but his answer is nothing she expected."
+        },
+        "description": {
+          "en": "After the auction Nora thanks Luca, but his answer is nothing she expected."
+        },
+        "duration": 92
+      },
+      {
+        "title": {
+          "en": "The Third Floor"
+        },
+        "headline": {
+          "en": "Leo spills his father's secret: Luca sent him to kindergarten just to be alone with Nora."
+        },
+        "description": {
+          "en": "Leo spills his father's secret: Luca sent him to kindergarten just to be alone with Nora."
+        },
+        "duration": 84
+      },
+      {
+        "title": {
+          "en": "Is He Doing It on Purpose?"
+        },
+        "headline": {
+          "en": "Nora carries coffee into Luca's forbidden room, bracing for a trap."
+        },
+        "description": {
+          "en": "Nora carries coffee into Luca's forbidden room, bracing for a trap."
+        },
+        "duration": 88
+      },
+      {
+        "title": {
+          "en": "First Day Bully"
+        },
+        "headline": {
+          "en": "Leo's first day at an elite school, and Nora runs into a spiteful face from her past."
+        },
+        "description": {
+          "en": "Leo's first day at an elite school, and Nora runs into a spiteful face from her past."
+        },
+        "duration": 93
+      },
+      {
+        "title": {
+          "en": "Just the Nanny"
+        },
+        "headline": {
+          "en": "The principal sides with a rich donor and demands Leo apologize for someone else's fault."
+        },
+        "description": {
+          "en": "The principal sides with a rich donor and demands Leo apologize for someone else's fault."
+        },
+        "duration": 88
+      },
+      {
+        "title": {
+          "en": "On Your Knees"
+        },
+        "headline": {
+          "en": "The cameras are \"under repair\", the bag costs 30 thousand, and Nora refuses to give in."
+        },
+        "description": {
+          "en": "The cameras are \"under repair\", the bag costs 30 thousand, and Nora refuses to give in."
+        },
+        "duration": 107
+      },
+      {
+        "title": {
+          "en": "Who Touched My Son?"
+        },
+        "headline": {
+          "en": "Leo is expelled, security throws Nora out, and then his father walks into the school."
+        },
+        "description": {
+          "en": "Leo is expelled, security throws Nora out, and then his father walks into the school."
+        },
+        "duration": 93
+      },
+      {
+        "title": {
+          "en": "You Touched My Family"
+        },
+        "headline": {
+          "en": "Everyone learns whose son Leo is, and Luca wants the camera footage in three minutes."
+        },
+        "description": {
+          "en": "Everyone learns whose son Leo is, and Luca wants the camera footage in three minutes."
+        },
+        "duration": 113
+      },
+      {
+        "title": {
+          "en": "I Wasn't Joking"
+        },
+        "headline": {
+          "en": "The bullies apologize, and Nora starts running a fever."
+        },
+        "description": {
+          "en": "The bullies apologize, and Nora starts running a fever."
+        },
+        "duration": 91
+      },
+      {
+        "title": {
+          "en": "The Ex Is Coming"
+        },
+        "headline": {
+          "en": "Luca won't leave sick Nora's side, while the Shaw family goes broke and looks for someone to blame."
+        },
+        "description": {
+          "en": "Luca won't leave sick Nora's side, while the Shaw family goes broke and looks for someone to blame."
+        },
+        "duration": 96
+      },
+      {
+        "title": {
+          "en": "Come Home With Me"
+        },
+        "headline": {
+          "en": "Luca nurses Nora like his most precious guest, but her ex is already waiting at the gate."
+        },
+        "description": {
+          "en": "Luca nurses Nora like his most precious guest, but her ex is already waiting at the gate."
+        },
+        "duration": 92
+      },
+      {
+        "title": {
+          "en": "Paid Nanny"
+        },
+        "headline": {
+          "en": "Sebastian drags Nora away by force, and Leo rushes to defend his \"mom\"."
+        },
+        "description": {
+          "en": "Sebastian drags Nora away by force, and Leo rushes to defend his \"mom\"."
+        },
+        "duration": 112
+      },
+      {
+        "title": {
+          "en": "A Husband's Privilege"
+        },
+        "headline": {
+          "en": "Luca punishes the Shaws and makes Nora an unexpected announcement."
+        },
+        "description": {
+          "en": "Luca punishes the Shaws and makes Nora an unexpected announcement."
+        },
+        "duration": 146
+      },
+      {
+        "title": {
+          "en": "Day One of the Chase"
+        },
+        "headline": {
+          "en": "Leo becomes his father's ally, and Luca learns to take \"no\" for an answer."
+        },
+        "description": {
+          "en": "Leo becomes his father's ally, and Luca learns to take \"no\" for an answer."
+        },
+        "duration": 126
+      },
+      {
+        "title": {
+          "en": "First Real Date"
+        },
+        "headline": {
+          "en": "Luca regrets not buying out the whole cinema and gets behind the wheel himself."
+        },
+        "description": {
+          "en": "Luca regrets not buying out the whole cinema and gets behind the wheel himself."
+        },
+        "duration": 98
+      },
+      {
+        "title": {
+          "en": "Where Did Leo Come From?"
+        },
+        "headline": {
+          "en": "In the dark theater Nora can't breathe next to Luca."
+        },
+        "description": {
+          "en": "In the dark theater Nora can't breathe next to Luca."
+        },
+        "duration": 89
+      },
+      {
+        "title": {
+          "en": "Kiss in the Rain"
+        },
+        "headline": {
+          "en": "Luca closed an entire floor of the restaurant and remembers every little thing about Nora."
+        },
+        "description": {
+          "en": "Luca closed an entire floor of the restaurant and remembers every little thing about Nora."
+        },
+        "duration": 110
+      },
+      {
+        "title": {
+          "en": "Do You Like Me?"
+        },
+        "headline": {
+          "en": "Sebastian finds a new girlfriend to make Nora jealous."
+        },
+        "description": {
+          "en": "Sebastian finds a new girlfriend to make Nora jealous."
+        },
+        "duration": 140
+      },
+      {
+        "title": {
+          "en": "Can I Hold You?"
+        },
+        "headline": {
+          "en": "Sebastian is sure Nora will crawl back, and Leo spots lipstick on his father's lips."
+        },
+        "description": {
+          "en": "Sebastian is sure Nora will crawl back, and Leo spots lipstick on his father's lips."
+        },
+        "duration": 109
+      },
+      {
+        "title": {
+          "en": "A Proper Wedding"
+        },
+        "headline": {
+          "en": "Luca is done taking it one step at a time."
+        },
+        "description": {
+          "en": "Luca is done taking it one step at a time."
+        },
+        "duration": 86
+      },
+      {
+        "title": {
+          "en": "Love at First Sight"
+        },
+        "headline": {
+          "en": "A wedding with an unlimited budget, and Nora asks why he is so good to her."
+        },
+        "description": {
+          "en": "A wedding with an unlimited budget, and Nora asks why he is so good to her."
+        },
+        "duration": 89
+      },
+      {
+        "title": {
+          "en": "Will You Marry Me?"
+        },
+        "headline": {
+          "en": "Pink diamonds, rings with two L's, and a little guardian of the marriage."
+        },
+        "description": {
+          "en": "Pink diamonds, rings with two L's, and a little guardian of the marriage."
+        },
+        "duration": 145
+      },
+      {
+        "title": {
+          "en": "The Possessive Groom"
+        },
+        "headline": {
+          "en": "A dress fitting turns into an international conference."
+        },
+        "description": {
+          "en": "A dress fitting turns into an international conference."
+        },
+        "duration": 88
+      },
+      {
+        "title": {
+          "en": "Who's the Bride?"
+        },
+        "headline": {
+          "en": "The dress is top secret until the wedding day."
+        },
+        "description": {
+          "en": "The dress is top secret until the wedding day."
+        },
+        "duration": 110
+      },
+      {
+        "title": {
+          "en": "Still Time to Cancel"
+        },
+        "headline": {
+          "en": "The Shaws head to Luca's wedding so Nora can finally \"face reality\"."
+        },
+        "description": {
+          "en": "The Shaws head to Luca's wedding so Nora can finally \"face reality\"."
+        },
+        "duration": 93
+      },
+      {
+        "title": {
+          "en": "The Bride Revealed"
+        },
+        "headline": {
+          "en": "Guests guess who the bride is, and the Shaws gloat that Nora has been replaced."
+        },
+        "description": {
+          "en": "Guests guess who the bride is, and the Shaws gloat that Nora has been replaced."
+        },
+        "duration": 94
+      },
+      {
+        "title": {
+          "en": "Are You Finished?"
+        },
+        "headline": {
+          "en": "Sebastian makes a scene right at the altar."
+        },
+        "description": {
+          "en": "Sebastian makes a scene right at the altar."
+        },
+        "duration": 107
+      },
+      {
+        "title": {
+          "en": "Call Off the Wedding"
+        },
+        "headline": {
+          "en": "Security drags the Shaws out, and Sebastian's date learns the truth."
+        },
+        "description": {
+          "en": "Security drags the Shaws out, and Sebastian's date learns the truth."
+        },
+        "duration": 93
+      },
+      {
+        "title": {
+          "en": "She Doesn't Want Me"
+        },
+        "headline": {
+          "en": "Nora answers her ex once and for all and says her vows."
+        },
+        "description": {
+          "en": "Nora answers her ex once and for all and says her vows."
+        },
+        "duration": 122
+      },
+      {
+        "title": {
+          "en": "Only for You"
+        },
+        "headline": {
+          "en": "The first dance of Mr. and Mrs. Luca, and drones light up the whole city."
+        },
+        "description": {
+          "en": "The first dance of Mr. and Mrs. Luca, and drones light up the whole city."
+        },
+        "duration": 103
+      }
+    ]
+  },
+  {
+    "slug": "after-divorce-hotel-is-mine",
+    "source": "posle-razvoda",
+    "rank": 5,
+    "tag": "new",
+    "genre": "melodrama",
+    "views": 9800000,
+    "likes": 412000,
+    "title": {
+      "en": "After the Divorce, the Hotel Is Mine",
+      "es": "Después del divorcio, el hotel es mío",
+      "id": "Setelah Cerai, Hotel Ini Milikku",
+      "ru": "После развода отель мой"
+    },
+    "synopsis": {
+      "en": "On their anniversary Maya catches her husband with her best friend and learns her hotel has been sold behind her back. The sale was approved by a video of her that she never recorded.",
+      "id": "Di hari ulang tahun pernikahan, Maya memergoki suaminya bersama sahabatnya dan tahu hotelnya dijual diam-diam. Penjualan itu disetujui lewat video dirinya yang tidak pernah ia rekam.",
+      "es": "En su aniversario, Maya sorprende a su marido con su mejor amiga y descubre que su hotel se vendió a sus espaldas. La venta se aprobó con un vídeo suyo que ella nunca grabó.",
+      "ru": "В годовщину свадьбы Майя застаёт мужа с лучшей подругой и узнаёт, что её отель тайно продан. Продажу одобрили по видео, которое Майя никогда не записывала."
+    },
+    "coverFrame": {
+      "episode": 1,
+      "at": 3
+    },
+    "episodes": [
+      {
+        "title": {
+          "en": "The Anniversary Gift",
+          "es": "El regalo de aniversario",
+          "id": "Hadiah Ulang Tahun Pernikahan",
+          "ru": "Подарок на годовщину"
+        },
+        "headline": {
+          "en": "She came with an anniversary gift — and found him kissing her best friend",
+          "es": "Llegó con un regalo de aniversario — y lo encontró besando a su mejor amiga",
+          "id": "Datang membawa hadiah anniversary — suaminya malah mencium sahabatnya",
+          "ru": "Пришла с подарком на годовщину — а он целует её лучшую подругу"
+        },
+        "description": {
+          "en": "Maya opens the suite door with a gift and catches her husband with her best friend. Around the friend's neck: her late mother's necklace, \"stolen\" a year ago. On the desk, a contract: her hotel sold for 12 million. The money lands at midnight.",
+          "es": "Maya abre la puerta de la suite con un regalo y sorprende a su esposo con su mejor amiga. En el cuello de la amiga, el collar de su difunta madre, \"robado\" hace un año. Sobre la mesa, un contrato: su hotel vendido por 12 millones. El dinero llega a medianoche.",
+          "id": "Maya membuka pintu suite dan memergoki suaminya bersama sahabatnya. Di leher sahabatnya ada kalung ibunya yang katanya dicuri. Di meja ada kontrak: hotelnya dijual 12 juta dolar. Uangnya masuk tengah malam.",
+          "ru": "Майя открывает дверь люкса с подарком и застаёт мужа с лучшей подругой. На шее подруги — мамино колье, «украденное» год назад. А на столе договор: её отель продан за 12 миллионов. Деньги придут в полночь."
+        },
+        "frameAt": 8,
+        "duration": 47
+      },
+      {
+        "title": {
+          "en": "Midnight",
+          "es": "Medianoche",
+          "id": "Tengah Malam",
+          "ru": "Полночь"
+        },
+        "headline": {
+          "en": "One minute to midnight: can she stop the sale of her own hotel?",
+          "es": "Falta un minuto para la medianoche: ¿podrá detener la venta de su hotel?",
+          "id": "Satu menit lagi tengah malam: bisakah dia menghentikan penjualan hotelnya?",
+          "ru": "До полуночи минута: успеет ли она остановить продажу своего отеля?"
+        },
+        "description": {
+          "en": "Maya calls the manager to stop the transfer. Her husband lays divorce papers on the gift: \"Half the hotel is mine.\" The buyer says Maya agreed to the sale on video. But Maya never recorded that video.",
+          "es": "Maya llama al gerente para detener la transferencia. Su esposo deja los papeles del divorcio sobre el regalo: \"La mitad del hotel es mía.\" El comprador dice que Maya aceptó la venta en un video. Pero Maya nunca grabó ese video.",
+          "id": "Maya menelepon manajer untuk menghentikan transfer. Suaminya menaruh surat cerai di atas hadiah: \"Separuh hotel untukku.\" Pembeli bilang Maya sudah setuju lewat video. Padahal Maya tidak pernah merekam video itu.",
+          "ru": "Майя звонит управляющему и требует остановить перевод. Муж в ответ кладёт на подарок соглашение о разводе: «Половина отеля мне». Покупатель уверяет, что Майя сама согласилась на продажу по видео. Только Майя этого видео не записывала."
+        },
+        "frameAt": 20,
+        "duration": 49
+      },
+      {
+        "title": {
+          "en": "The Original",
+          "es": "El original",
+          "id": "Video Asli",
+          "ru": "Оригинал"
+        },
+        "headline": {
+          "en": "Her best friend filmed her at her mother's birthday — and turned it into a fake",
+          "es": "Su mejor amiga la grabó en el cumpleaños de su madre — y lo convirtió en una falsificación",
+          "id": "Sahabatnya merekam di ulang tahun ibunya — lalu menjadikannya video palsu",
+          "ru": "Подруга сняла её на мамином юбилее — и превратила это видео в подделку"
+        },
+        "description": {
+          "en": "Maya finds the original of the fake video: her mother's birthday, candles, laughter. Lina's email, voice notes from the hospital, a husband shifting the blame. And her late mother's voice: \"I leave the hotel to Raka.\" Below it, his message: \"Voice is close. Do another take.\"",
+          "es": "Maya encuentra el original del video falso: el cumpleaños de su madre, velas, risas. El correo de Lina, notas de voz desde el hospital, un esposo que culpa a otros. Y la voz de su difunta madre: \"Le dejo el hotel a Raka.\" Debajo, su mensaje: \"La voz se parece. Haz otra toma.\"",
+          "id": "Maya menemukan video aslinya: ulang tahun ibu, lilin, tawa. Email Lina, pesan suara dari rumah sakit, suami yang melempar kesalahan. Lalu suara mendiang ibu: \"Hotel ini kuwariskan untuk Raka.\" Di bawahnya pesan suaminya: \"Suaranya mirip. Buat satu take lagi.\"",
+          "ru": "Майя находит оригинал фальшивого видео: мамин юбилей, свечи, смех. Почта Лины, голосовые из больницы, муж, сваливающий вину. И голос умершей мамы: «Отель я оставляю Раке». Под записью — сообщение мужа: «Голос похож. Сделай ещё дубль»."
+        },
+        "frameAt": 8,
+        "duration": 51
+      }
+    ],
+    "coverTagline": {
+      "en": "Her husband and best friend sold her hotel. She will take it all back.",
+      "es": "Su marido y su mejor amiga vendieron su hotel. Ella lo recuperará todo."
+    }
+  }
+]

@@ -1,0 +1,82 @@
+/*
+ * HeroUI styles, limited to the components this site renders (the full bundle ships CSS for
+ * ~85 components). Same layers and order as @heroui/styles/dist/index.css; when a new HeroUI
+ * component is used, add its file here in the order of components/index.css.
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss";
+@import "@heroui/styles/base" layer(base);
+@import "@heroui/styles/base/scrollbar.css" layer(base);
+@import "@heroui/styles/components/close-button.css" layer(components);
+@import "@heroui/styles/components/description.css" layer(components);
+@import "@heroui/styles/components/error-message.css" layer(components);
+@import "@heroui/styles/components/field-error.css" layer(components);
+@import "@heroui/styles/components/label.css" layer(components);
+@import "@heroui/styles/components/tabs.css" layer(components);
+@import "@heroui/styles/components/button.css" layer(components);
+@import "@heroui/styles/components/spinner.css" layer(components);
+@import "@heroui/styles/components/input.css" layer(components);
+@import "@heroui/styles/components/textfield.css" layer(components);
+@import "@heroui/styles/components/surface.css" layer(components);
+@import "@heroui/styles/components/modal.css" layer(components);
+@import "@heroui/styles/themes/default" layer(theme);
+@import "@heroui/styles/utilities";
+@import "@heroui/styles/variants";
+
+/*
+ * The site is dark-only (class `dark` on <html>), so only the dark HeroUI
+ * tokens are overridden. Accent is the pink used for active tabs and CTAs.
+ */
+.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --accent: oklch(0.68 0.22 8);
+  --accent-foreground: oklch(99% 0 0);
+  --accent-soft-foreground: oklch(0.78 0.16 8);
+  --background: oklch(13.5% 0.004 285);
+  --foreground: oklch(97% 0 0);
+  --border: oklch(28% 0.004 285);
+  --separator: oklch(25% 0.004 285);
+  --muted: oklch(68% 0.006 285);
+  --default: oklch(26% 0.004 285);
+  --default-foreground: oklch(97% 0 0);
+  --surface: oklch(20% 0.004 285);
+  --surface-foreground: oklch(97% 0 0);
+  --surface-secondary: oklch(24% 0.004 285);
+  --surface-secondary-foreground: oklch(97% 0 0);
+  --surface-tertiary: oklch(27% 0.004 285);
+  --surface-tertiary-foreground: oklch(97% 0 0);
+  --overlay: oklch(20% 0.004 285);
+  --overlay-foreground: oklch(97% 0 0);
+  --field-background: oklch(26% 0.004 285);
+  --field-border: transparent;
+  --field-foreground: oklch(97% 0 0);
+  --field-placeholder: oklch(62% 0.006 285);
+  --focus: oklch(0.68 0.22 8);
+  --segment: oklch(34% 0.004 285);
+  --segment-foreground: oklch(97% 0 0);
+  --danger: oklch(0.7044 0.1872 23.19);
+  --danger-foreground: oklch(15% 0.05 23.19);
+
+  --radius: 0.5rem;
+  --field-radius: 0.75rem;
+
+  --font-sans: var(--font-inter);
+}
+
+@theme inline {
+  /* Gold of the "№1 дня" rank chip. */
+  --color-gold: oklch(0.82 0.13 85);
+  --color-gold-soft: oklch(0.32 0.05 70);
+  /* Coral of the corner tag on covers. */
+  --color-tag: oklch(0.68 0.2 20);
+  /* Wordmark face (Bricolage Grotesque, loaded in layout). */
+  --font-display: var(--font-brand), var(--font-brand-cyrillic);
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

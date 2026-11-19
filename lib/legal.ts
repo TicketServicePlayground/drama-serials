@@ -9,10 +9,10 @@ export const TERMS_VERSION = "2026-11-17.2";
 
 /** Who runs the service. Payments are collected through this company's Xendit and DOKU accounts. */
 export const OPERATOR = {
-  name: "PT LTV CAC GROUP",
+  name: "AFFINET SERIALS",
   address:
     "GoWork Plaza Indonesia, Level 5, Unit E021AB, Jl. M.H. Thamrin Kav. 28-30, Jakarta 10350, Indonesia",
-  email: "ceo@ltvcac.agency",
+  email: "support@affinet.link",
   site: "affinet.link",
 } as const;
 

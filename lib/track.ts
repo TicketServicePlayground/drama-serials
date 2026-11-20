@@ -1,6 +1,8 @@
 // The site's own counter (backend/app/visits.py): page views from components/VisitCounter and
 // funnel clicks from here. No cookies; the API keeps a daily hash of IP + browser.
 
+import { gateGroup } from "./ab";
+
 export type FunnelEvent = "cover" | "auth_open" | "episode" | "email_gate" | "paywall";
 
 export interface VisitBeacon {
@@ -36,7 +38,9 @@ function clientId(): string {
 
 export function sendVisit(beacon: VisitBeacon): void {
   if (typeof window === "undefined" || navigator.webdriver || window.location.pathname.startsWith("/stats")) return;
-  const payload = new Blob([JSON.stringify({ ...beacon, cid: clientId() })], { type: "application/json" });
+  const cid = clientId();
+  // The A/B group goes along only when it can stay the same (storage works).
+  const payload = new Blob([JSON.stringify({ ...beacon, cid, ab: cid ? gateGroup() : "" })], { type: "application/json" });
   if (!navigator.sendBeacon?.("/api/v", payload)) {
     fetch("/api/v", { method: "POST", body: payload, keepalive: true }).catch(() => {});
   }

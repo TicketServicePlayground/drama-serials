@@ -130,6 +130,8 @@ async def account(session: AsyncSession, user: User) -> dict:
         "has_access": active,
         "episodes": await unlocked_episodes(session, user.id),
         "series_passes": await series_passes(session, user.id),
+        # Left an email at the "more free episodes" offer: those episodes play.
+        "email_bonus": user.email_gate_at is not None,
     }
 
 
@@ -250,21 +252,19 @@ async def play(
 
     now = datetime.now(UTC)
     free = 0 < episode <= settings.free_episodes
-    # The next few play for an email: the feed asks for one instead of the paywall.
+    # The next few play for those who left an email at the offer (half the visitors see it).
     bonus = settings.free_episodes < episode <= settings.free_episodes + settings.email_bonus_episodes
     if user is None and not free:
-        return error("email_required", 403) if bonus else error("unauthorized", 401)
+        return error("unauthorized", 401)
     until = await access_until(session, user.id) if user else None
     vip = until is not None and until > now
-    entitled = free or vip or (bonus and user is not None and bool(user.email))
+    entitled = free or vip or (bonus and user is not None and user.email_gate_at is not None)
     if not entitled and user is not None:
         series_until = await series_access_until(session, user.id, slug)
         entitled = (series_until is not None and series_until > now) or (
             not vip_only and await has_episode(session, user.id, slug, episode)
         )
     if not entitled:
-        if bonus and user is not None and not user.email:
-            return error("email_required", 403)
         return error("payment_required", 402)
     logger.info(
         "audit play user=%s episode=%s/%s ip=%s", user.id if user else "-", slug, episode, client_ip(request)

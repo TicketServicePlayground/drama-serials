@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
       event: field("event", 20),
       target: field("target", 80),
       cid: field("cid", 32),
+      ab: field("ab", 16),
       ip,
       ua: request.headers.get("user-agent") ?? "",
     },

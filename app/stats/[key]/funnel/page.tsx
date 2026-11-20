@@ -22,6 +22,7 @@ interface Funnel {
   by_source: (Counts & { source: string })[];
   by_country: (Counts & Attributed & { country: string })[];
   by_campaign: (Counts & Attributed & { campaign: string; content: string })[];
+  by_ab: (Counts & { ab: string; paid_by_group: number; revenue_by_group: number; emails: number })[];
   by_series: { slug: string; cover: number; series: number; episode: number; paywall: number }[];
   server: { signups: number; checkouts: number; paid: number; revenue: number };
 }
@@ -141,6 +142,48 @@ export default async function FunnelPage({ params, searchParams }: {
         <p className="mt-2 text-xs text-muted">
           Считаются люди за день (одно устройство в один день = 1). Кто уже вошёл в аккаунт, идёт мимо шагов 3–4, поэтому
           «от пред.» бывает больше 100%.
+        </p>
+      </section>
+
+      <section className="mt-6">
+        <h2 className="mb-2 text-sm font-semibold">A/B: сразу тарифы или email → тарифы</h2>
+        {(data.by_ab ?? []).length === 0 ? (
+          <p className="text-xs text-muted">пока пусто</p>
+        ) : (
+          <table className="w-full text-sm tabular-nums">
+            <thead className="text-xs text-muted">
+              <tr className="text-right">
+                <th className="py-1 text-left font-normal">группа</th>
+                <th className="font-normal">дошли до замка</th>
+                <th className="font-normal">email</th>
+                <th className="font-normal">тарифы</th>
+                <th className="font-normal">оплата</th>
+                <th className="font-normal">оплатили</th>
+                <th className="font-normal">оплат группы</th>
+                <th className="font-normal">выручка группы</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.by_ab.map((r) => (
+                <tr key={r.ab} className="border-t border-border text-right">
+                  <td className="py-1.5 text-left">{r.ab === "email" ? "email → тарифы" : "сразу тарифы"}</td>
+                  <td>{r.visit}</td>
+                  <td>{r.emails}</td>
+                  <td>{r.paywall}</td>
+                  <td>{r.checkout}</td>
+                  <td>{r.paid}</td>
+                  <td>{r.paid_by_group}</td>
+                  <td>{formatIdr(r.revenue_by_group)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <p className="mt-2 text-xs text-muted">
+          Браузер случайно попадает в группу один раз. «email → тарифы»: на первой закрытой серии один раз предлагаем
+          ещё 3 серии за email (можно отказаться и сразу открыть тарифы), тарифы — после них. «Дошли до замка», «тарифы»,
+          «оплата», «оплатили» — люди за день; «email» — аккаунты, созданные за период через это окно; «оплат группы» и
+          «выручка» — все оплаты за период аккаунтов этой группы, даже через дни.
         </p>
       </section>
 

@@ -72,6 +72,11 @@ class User(Base):
     src_content: Mapped[str | None] = mapped_column(String(150))
     src_country: Mapped[str | None] = mapped_column(String(2))
     src_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # A/B test at the first locked episode ("paywall" = plans at once, "email" = an email for
+    # more free episodes first): the group of the browser this account first used; "" = none.
+    ab: Mapped[str] = mapped_column(String(16), server_default="", default="")
+    # Left an email at that offer: the episodes after the free ones play (EMAIL_BONUS_EPISODES).
+    email_gate_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Payment(Base):
@@ -221,6 +226,8 @@ class Visit(Base):
     # Random id from the browser's own storage: the same browser on another day ("" = none,
     # e.g. visits from before it was added). Used to count return visits.
     client_id: Mapped[str] = mapped_column(String(32), server_default="", default="", index=True)
+    # A/B group of the browser ("paywall" / "email", see User.ab); "" = before the test.
+    ab: Mapped[str] = mapped_column(String(16), server_default="", default="")
     user_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )

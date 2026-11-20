@@ -79,6 +79,8 @@ PERSON = "coalesce(nullif(client_id, ''), visitor)"
 #   paywall   - the plans were shown (target = slug, or "vip" for the VIP page)
 #   email_gate - "more episodes free for an email" was shown (target = "slug/number")
 EVENTS = {"", "cover", "auth_open", "episode", "email_gate", "paywall"}
+# The A/B test at the first locked episode: the plans at once, or an email for more free ones.
+AB_GROUPS = {"paywall", "email"}
 
 
 class PageView(BaseModel):
@@ -96,6 +98,8 @@ class PageView(BaseModel):
     target: str = ""
     # Random id from the browser's storage (lib/track.ts): the same browser on other days.
     cid: str = ""
+    # A/B group of this browser at the first locked episode: "paywall" or "email".
+    ab: str = ""
     # Filled in by the site's server from the request, never by the browser.
     ip: str = ""
     ua: str = ""
@@ -123,6 +127,7 @@ async def track(body: PageView, user: CurrentUser, session: Session):
         event=body.event,
         target=body.target.strip()[:80],
         client_id=body.cid if CLIENT_ID_RE.match(body.cid) else "",
+        ab=body.ab if body.ab in AB_GROUPS else "",
         user_id=user.id if user else None,
     )
     session.add(visit)
@@ -131,6 +136,8 @@ async def track(body: PageView, user: CurrentUser, session: Session):
             user.is_test = True
         if user.src_at is None:
             await _remember_first_source(session, user, visit)
+        if not user.ab and visit.ab:
+            user.ab = visit.ab
     await session.commit()
     return None
 
@@ -392,6 +399,7 @@ async def funnel(
             coalesce((array_agg(utm_campaign ORDER BY at) FILTER (WHERE utm_campaign <> ''))[1], '') AS campaign,
             coalesce((array_agg(utm_content ORDER BY at) FILTER (WHERE utm_content <> ''))[1], '') AS content,
             coalesce((array_agg(country ORDER BY at) FILTER (WHERE country <> ''))[1], '') AS country,
+            coalesce((array_agg(ab ORDER BY at) FILTER (WHERE ab <> ''))[1], '') AS ab,
             bool_or(event = '') AS visit,
             bool_or(event = 'cover') AS cover,
             bool_or(event = 'auth_open') AS auth_open,
@@ -434,6 +442,45 @@ async def funnel(
     by_source = await grouped("source", "visit DESC, source")
     by_country = await grouped("country", "visit DESC, country")
     by_campaign = await grouped("campaign, content", "campaign = '', visit DESC, campaign, content")
+    # The A/B test: only visitor-days that reached a locked episode (saw the paywall or the
+    # email offer); payments made later count by the payer's group (users.ab).
+    by_ab = [row for row in await grouped("ab", "ab") if row["ab"] and (row["paywall"] or row["email_gate"])]
+    ab_paid = _rows(
+        await session.execute(
+            text(
+                """
+                SELECT u.ab, count(*) AS paid, sum(p.amount) AS revenue,
+                       count(DISTINCT p.user_id) AS payers
+                FROM payments p JOIN users u ON u.id = p.user_id
+                WHERE p.status = 'paid' AND u.ab <> ''
+                  AND (p.paid_at AT TIME ZONE :tz)::date >= :start AND (p.paid_at AT TIME ZONE :tz)::date < :end
+                  AND (:country = '' OR coalesce(u.src_country, '') = :country)
+                GROUP BY u.ab
+                """
+            ),
+            params,
+        )
+    )
+    ab_signups = _rows(
+        await session.execute(
+            text(
+                """
+                SELECT ab, count(*) AS users, count(*) FILTER (WHERE email_gate_at IS NOT NULL) AS emails
+                FROM users WHERE ab <> ''
+                  AND (created_at AT TIME ZONE :tz)::date >= :start AND (created_at AT TIME ZONE :tz)::date < :end
+                GROUP BY ab
+                """
+            ),
+            params,
+        )
+    )
+    paid_by = {r["ab"]: r for r in ab_paid}
+    users_by = {r["ab"]: r for r in ab_signups}
+    for row in by_ab:
+        p = paid_by.get(row["ab"], {})
+        row["paid_by_group"] = int(p.get("paid") or 0)
+        row["revenue_by_group"] = int(p.get("revenue") or 0)
+        row["emails"] = int(users_by.get(row["ab"], {}).get("emails") or 0)
     total = {step: sum(row[step] for row in by_source) for step in FUNNEL_STEPS}
     total["revenue"] = sum(row["revenue"] for row in by_source)
 
@@ -532,6 +579,7 @@ async def funnel(
         "by_source": by_source,
         "by_country": by_country,
         "by_campaign": by_campaign,
+        "by_ab": by_ab,
         "by_series": by_series,
         "server": {**dict(server._mapping), "revenue": int(server.revenue)},
     }

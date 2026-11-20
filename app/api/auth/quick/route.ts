@@ -11,7 +11,14 @@ export async function POST(request: Request) {
     method: "POST",
     token: (await getToken()) ?? undefined,
     ip: clientIp(request),
-    body: { email: body?.email ?? "", locale: body?.locale ?? "en" },
+    body: {
+      email: body?.email ?? "",
+      locale: body?.locale ?? "en",
+      source: body?.source === "email_gate" ? "email_gate" : "",
+      // The email offer confirms the address: the emailed code and its challenge.
+      code: typeof body?.code === "string" ? body.code.slice(0, 12) : "",
+      challenge: typeof body?.challenge === "string" ? body.challenge.slice(0, 1000) : "",
+    },
   });
   if (status !== 200) return Response.json({ error: data.error ?? "generic" }, { status });
   await startSession(data.token);

@@ -21,6 +21,9 @@ from app.api import CurrentUser, Session, account, client_ip, error
 from app.config import settings
 from app.models import Payment, User
 from app.security import (
+    code_matches,
+    issue_email_challenge,
+    read_email_challenge,
     check_return_key,
     hash_password,
     issue_token,
@@ -67,6 +70,72 @@ def compose(lang: str, email: str, password: str) -> tuple[str, str, str]:
 class QuickSignup(BaseModel):
     email: str = ""
     locale: str = "en"
+    # "email_gate": given at the "more free episodes for an email" offer, which opens them. The
+    # address must be confirmed first: the code emailed by /auth/email-code and its challenge.
+    source: str = ""
+    code: str = ""
+    challenge: str = ""
+
+
+class EmailCodeRequest(BaseModel):
+    email: str = ""
+    locale: str = "en"
+
+
+CODE_TEXT = {
+    "en": ("Your AN Serials code: {code}", "Your code to confirm this email on AN Serials:",
+           "It works for 15 minutes. If you did not ask for it, ignore this email."),
+    "id": ("Kode AN Serials kamu: {code}", "Kode untuk mengonfirmasi email ini di AN Serials:",
+           "Berlaku 15 menit. Jika kamu tidak memintanya, abaikan email ini."),
+    "es": ("Tu código de AN Serials: {code}", "Tu código para confirmar este correo en AN Serials:",
+           "Vale 15 minutos. Si no lo pediste, ignora este correo."),
+    "ru": ("Код AN Serials: {code}", "Код для подтверждения почты на AN Serials:",
+           "Действует 15 минут. Если вы его не запрашивали, просто удалите письмо."),
+}
+
+# Wrong codes per challenge (this process; a restart only resets the count) and the last send
+# per address: a code cannot be guessed in a few tries, and an address is not spammed.
+MAX_CODE_TRIES = 5
+_code_tries: dict[str, int] = {}
+_last_sent: dict[str, datetime] = {}
+RESEND_AFTER = timedelta(seconds=30)
+
+
+def compose_code(lang: str, code: str) -> tuple[str, str, str]:
+    subject, lead, note = CODE_TEXT.get(lang, CODE_TEXT["en"])
+    subject = subject.format(code=code)
+    plain = f"{lead}\n\n{code}\n\n{note}\n"
+    e = html.escape
+    body = f"""<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#111">
+<p>{e(lead)}</p>
+<p style="font-family:monospace;font-size:28px;font-weight:bold;letter-spacing:6px">{e(code)}</p>
+<p style="color:#888;font-size:12px">{e(note)}</p></div>"""
+    return subject, plain, body
+
+
+@router.post("/auth/email-code")
+async def email_code(body: EmailCodeRequest, request: Request, session: Session):
+    """Step one of the email offer: a 6-digit code to the address; the browser gets a signed
+    challenge to send back with the code (POST /auth/quick, source "email_gate")."""
+    email = normalize_email(body.email)
+    if not email:
+        return error("invalid_email", 400)
+    if await session.scalar(select(User.id).where(User.email == email)) is not None:
+        return error("email_taken", 409)
+    now = datetime.now(UTC)
+    last = _last_sent.get(email)
+    if last is not None and now - last < RESEND_AFTER:
+        return error("too_soon", 429)
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    lang = body.locale if body.locale in CODE_TEXT else "en"
+    try:
+        await mailer.send(email, *compose_code(lang, code))
+    except Exception:  # noqa: BLE001
+        logger.exception("email code to %s failed", email)
+        return error("mail_failed", 502)
+    _last_sent[email] = now
+    logger.info("audit email-code email=%s ip=%s", email, client_ip(request))
+    return {"challenge": issue_email_challenge(email, code)}
 
 
 @router.post("/auth/guest")
@@ -87,6 +156,17 @@ async def quick_signup(body: QuickSignup, request: Request, session: Session, cu
         return error("invalid_email", 400)
     if await session.scalar(select(User.id).where(User.email == email)) is not None:
         return error("email_taken", 409)
+    if body.source == "email_gate":
+        challenge = read_email_challenge(body.challenge)
+        if challenge is None:
+            return error("code_expired", 400)
+        jti = challenge.get("jti", "")
+        if _code_tries.get(jti, 0) >= MAX_CODE_TRIES:
+            return error("too_many_attempts", 429)
+        if not code_matches(challenge, email, body.code):
+            _code_tries[jti] = _code_tries.get(jti, 0) + 1
+            return error("bad_code", 400)
+        _code_tries.pop(jti, None)
     password = new_password()
     if current is not None and current.email is None:
         # A guest (already paid by QRIS/SBP, say) adds an email for a card payment: keep the account.
@@ -101,6 +181,8 @@ async def quick_signup(body: QuickSignup, request: Request, session: Session, cu
             terms_accepted_at=datetime.now(UTC),
         )
         session.add(user)
+    if body.source == "email_gate":
+        user.email_gate_at = datetime.now(UTC)
     try:
         await session.commit()
     except IntegrityError:

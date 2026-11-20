@@ -65,7 +65,7 @@ function slowConnection(): boolean {
 async function fetchSource(slug: string, episode: number, locale: Locale): Promise<Load> {
   try {
     const response = await fetch(`/api/play/${slug}/${episode}?lang=${locale}`, { cache: "no-store" });
-    if (response.status === 402 || response.status === 401 || response.status === 403) return { kind: "locked" };
+    if (response.status === 402 || response.status === 401) return { kind: "locked" };
     if (response.status === 404) return { kind: "notReady" };
     const data = await response.json();
     if (!response.ok || !data.url) return { kind: "error" };
@@ -103,10 +103,8 @@ export function EpisodeFeed(props: {
   start: number | null;
   isLocked: (episode: Episode) => boolean;
   onClose: () => void;
-  /** Reached an episode that needs paying for (or an email: `needsEmail`). */
+  /** Reached an episode that needs paying for. */
   onLocked: (episode: Episode) => void;
-  /** Locked episodes that open for an email rather than a payment: their button says so. */
-  needsEmail?: (episode: Episode) => boolean;
   /** An episode started playing. */
   onWatch?: (episode: Episode) => void;
   /** The last episode played to the end. */
@@ -116,7 +114,7 @@ export function EpisodeFeed(props: {
   return <Feed {...props} start={props.start} />;
 }
 
-function Feed({ locale, slug, seriesTitle, episodes, start, isLocked, onClose, onLocked, needsEmail, onWatch, onFinished }: {
+function Feed({ locale, slug, seriesTitle, episodes, start, isLocked, onClose, onLocked, onWatch, onFinished }: {
   locale: Locale;
   slug: string;
   seriesTitle: string;
@@ -125,7 +123,6 @@ function Feed({ locale, slug, seriesTitle, episodes, start, isLocked, onClose, o
   isLocked: (episode: Episode) => boolean;
   onClose: () => void;
   onLocked: (episode: Episode) => void;
-  needsEmail?: (episode: Episode) => boolean;
   onWatch?: (episode: Episode) => void;
   onFinished?: (episode: Episode) => void;
 }) {
@@ -462,14 +459,8 @@ function Feed({ locale, slug, seriesTitle, episodes, start, isLocked, onClose, o
                 onClick={() => onLocked(episode)}
                 className="pointer-events-auto flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-tag px-5 py-3 font-semibold text-accent-foreground shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
-                {needsEmail?.(episode) ? (
-                  t.emailGate.cta
-                ) : (
-                  <>
-                    <CrownIcon className="size-5" />
-                    {t.player.unlock}
-                  </>
-                )}
+                <CrownIcon className="size-5" />
+                {t.player.unlock}
               </button>
             </>
           )}

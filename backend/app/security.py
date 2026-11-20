@@ -96,3 +96,40 @@ def read_transfer_token(token: str) -> uuid.UUID | None:
         return uuid.UUID(payload["sub"])
     except (jwt.PyJWTError, KeyError, ValueError):
         return None
+
+
+# A code emailed to confirm an address (the "more free episodes" offer): good this long.
+EMAIL_CODE_TTL = timedelta(minutes=15)
+
+
+def _code_digest(email: str, code: str) -> str:
+    return hmac.new(settings.jwt_secret.encode(), f"{email}:{code}".encode(), hashlib.sha256).hexdigest()
+
+
+def issue_email_challenge(email: str, code: str) -> str:
+    """What the browser keeps between "send me a code" and typing it: the address and a keyed
+    hash of the code (not the code itself), signed, for EMAIL_CODE_TTL."""
+    now = datetime.now(UTC)
+    payload = {
+        "purpose": "email_code",
+        "email": email,
+        "ch": _code_digest(email, code),
+        "jti": secrets.token_hex(8),
+        "iat": now,
+        "exp": now + EMAIL_CODE_TTL,
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+
+
+def read_email_challenge(token: str) -> dict | None:
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+    except jwt.PyJWTError:
+        return None
+    return payload if payload.get("purpose") == "email_code" else None
+
+
+def code_matches(challenge: dict, email: str, code: str) -> bool:
+    return challenge.get("email") == email and hmac.compare_digest(
+        challenge.get("ch", ""), _code_digest(email, code.strip())
+    )

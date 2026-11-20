@@ -38,6 +38,8 @@ export interface AccountView {
   access_until: string | null;
   has_access: boolean;
   episodes: { slug: string; episode: number }[];
+  /** Left an email at the "more free episodes" offer: those episodes play. */
+  email_bonus?: boolean;
   /** One-series passes still running. */
   series_passes: { slug: string; until: string }[];
 }

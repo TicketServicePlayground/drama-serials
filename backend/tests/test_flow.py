@@ -428,24 +428,23 @@ async def test_free_episodes_play_without_paying_or_signing_in(client, monkeypat
     assert (await client.get("/api/v1/episodes/free-show/7/play", headers=headers)).status_code == 402
 
 
-async def test_email_bonus_episodes_need_an_email_not_a_payment(client, monkeypatch):
+async def test_email_offer_opens_the_bonus_episodes_only_for_who_took_it(client, monkeypatch):
     from tests.test_points import media_ready
 
-    await media_ready(monkeypatch, slug="bonus-show", episodes=(7, 8, 10, 11))
+    await media_ready(monkeypatch, slug="bonus-show", episodes=(8, 10, 11))
     monkeypatch.setattr(settings, "free_episodes", 7)
     monkeypatch.setattr(settings, "email_bonus_episodes", 3)
     assert (await client.get("/api/v1/config")).json()["email_bonus_episodes"] == 3
-    # Signed out: the bonus ones ask for an email, the ones after them for signing in as before.
-    assert (await client.get("/api/v1/episodes/bonus-show/8/play")).status_code == 403
-    assert (await client.get("/api/v1/episodes/bonus-show/8/play")).json()["error"] == "email_required"
-    assert (await client.get("/api/v1/episodes/bonus-show/11/play")).status_code == 401
-    # A guest (paid by QRIS before, no email) is asked for one too.
-    guest = (await client.post("/api/v1/auth/guest")).json()["token"]
-    guest_headers = {"Authorization": f"Bearer {guest}"}
-    assert (await client.get("/api/v1/episodes/bonus-show/10/play", headers=guest_headers)).status_code == 403
-    # An email, given at the feed: the bonus ones play, the next one still needs paying.
-    quick = await client.post("/api/v1/auth/quick", json={"email": f"feed-{uuid.uuid4().hex[:8]}@example.com"})
+    # Signed out, or signed up the usual way: the episodes after the free ones need paying.
+    assert (await client.get("/api/v1/episodes/bonus-show/8/play")).status_code == 401
+    plain = await signup(client)
+    assert (await client.get("/api/v1/episodes/bonus-show/8/play", headers=plain)).status_code == 402
+    # An email given (and confirmed) at the offer: the bonus ones play, the next one needs paying.
+    from tests.test_quick_signup import confirmed_at_offer
+
+    quick = await confirmed_at_offer(client, monkeypatch, f"feed-{uuid.uuid4().hex[:8]}@example.com")
     assert quick.status_code == 200, quick.text
+    assert quick.json()["user"]["email_bonus"] is True
     headers = {"Authorization": f"Bearer {quick.json()['token']}"}
     assert (await client.get("/api/v1/episodes/bonus-show/8/play", headers=headers)).status_code == 200
     assert (await client.get("/api/v1/episodes/bonus-show/10/play", headers=headers)).status_code == 200

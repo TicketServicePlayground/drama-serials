@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
 import type { Episode, Serial } from "@/lib/catalog";
 import type { AccountView } from "@/lib/billing-types";
+import { emailOfferSeen, gateGroup } from "@/lib/ab";
 import { getDictionary, withLocale, type Locale } from "@/lib/i18n";
 import { trackPixel, trackViewing } from "@/lib/pixel";
 import { trackEvent } from "@/lib/track";
@@ -41,7 +42,7 @@ export function SeriesView({ serial, locale, initialCollections, account, freeEp
   /** null = signed out. */
   account: AccountView | null;
   freeEpisodes: number;
-  /** The episodes after the free ones that play for an email: a signed-out visitor gives one. */
+  /** The episodes after the free ones that open for an email left at the offer (A/B test). */
   emailBonus?: number;
   /** Series that can be bought for a day (paywall choice). */
   seriesOptions: SeriesOption[];
@@ -73,21 +74,23 @@ export function SeriesView({ serial, locale, initialCollections, account, freeEp
   const pass = passUntil > now;
   const owned = new Set((account?.episodes ?? []).filter((e) => e.slug === serial.slug).map((e) => e.episode));
   const isFree = (episode: Episode) => episode.number <= freeEpisodes;
-  // The next few after the free ones open for an email (any account that has one).
+  // The next few after the free ones open for an email left at the offer.
   const isBonus = (episode: Episode) => episode.number > freeEpisodes && episode.number <= freeEpisodes + emailBonus;
-  const hasEmail = Boolean(account?.email);
   // VIP series need a pass; a single bought episode does not open them.
   const isLocked = (episode: Episode) =>
-    !isFree(episode) && !(isBonus(episode) && hasEmail) && !vip && !pass && (serial.vip || !owned.has(episode.number));
-  const needsEmail = (episode: Episode) => isLocked(episode) && isBonus(episode) && !hasEmail;
+    !isFree(episode) && !(isBonus(episode) && account?.email_bonus) && !vip && !pass && (serial.vip || !owned.has(episode.number));
+  // A/B test: the "email" group is offered, once, more free episodes for an email instead of the
+  // plans; who already has an email (signed up) gets the plans as before.
+  const offerEmail = (episode: Episode) =>
+    isBonus(episode) && !account?.email && gateGroup() === "email" && !emailOfferSeen();
   const lastEpisode = serial.episodes[serial.episodes.length - 1]?.number;
 
   // No sign-up first: a signed-out visitor gives an email at paying (PaywallPanel).
   const openPaywall = useCallback((target: PaywallTarget) => setPaywall(target), []);
 
   const play = (episode: Episode) => {
-    if (needsEmail(episode)) {
-      // The feed opens behind the email form and plays on once the email is in.
+    if (isLocked(episode) && offerEmail(episode)) {
+      // The feed opens behind the offer and plays on once the email is in.
       setFeedAt(episode.number);
       setEmailFor(episode.number);
     } else if (isLocked(episode)) {
@@ -96,9 +99,9 @@ export function SeriesView({ serial, locale, initialCollections, account, freeEp
     } else setFeedAt(episode.number);
   };
 
-  // Swiped on to a locked episode: the email form (bonus ones) or the paywall opens over the feed.
+  // Swiped on to a locked episode: the email offer (once, "email" group) or the paywall.
   const needPayment = (episode: Episode) => {
-    if (needsEmail(episode)) setEmailFor(episode.number);
+    if (offerEmail(episode)) setEmailFor(episode.number);
     else openPaywall({ slug: serial.slug, episode: episode.number, vipOnly: serial.vip });
   };
 
@@ -220,7 +223,6 @@ export function SeriesView({ serial, locale, initialCollections, account, freeEp
         episodes={serial.episodes}
         start={feedAt}
         isLocked={isLocked}
-        needsEmail={needsEmail}
         onClose={() => setFeedAt(null)}
         onLocked={needPayment}
         onWatch={(episode) => {
@@ -242,6 +244,11 @@ export function SeriesView({ serial, locale, initialCollections, account, freeEp
         onSignIn={() => {
           setSignInFor(emailFor);
           setEmailFor(null);
+        }}
+        onPaywall={() => {
+          const episode = emailFor;
+          setEmailFor(null);
+          openPaywall({ slug: serial.slug, episode: episode ?? undefined, vipOnly: serial.vip });
         }}
         onClose={() => setEmailFor(null)}
       />

@@ -167,3 +167,28 @@ async def test_series_views_count_real_plays(client):
                                                   "event": "episode", "target": f"real-views/{n}"})
     views = (await client.get("/api/v1/series-views")).json()
     assert views["series"]["real-views"] == 3 and views["episodes"]["real-views~1"] == 2
+
+
+async def test_ab_groups_split_the_funnel_and_the_later_payments(client, gateways):
+    from sqlalchemy import select
+
+    from app.db import SessionLocal
+    from app.models import User
+
+    ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) AB-test"
+    for group, ip in (("paywall", "198.51.100.71"), ("email", "198.51.100.72")):
+        headers = await signup(client)
+        base = {"ua": ua, "ip": ip, "ab": group, "cid": f"{'a' if group == 'paywall' else 'b'}" * 24}
+        await client.post("/api/v1/visits", json={**base, "path": "/series/ab-show"}, headers=headers)
+        event = "paywall" if group == "paywall" else "email_gate"
+        await client.post("/api/v1/visits", json={**base, "path": "/series/ab-show", "event": event, "target": "ab-show/8"}, headers=headers)
+    # A junk group is not kept.
+    await client.post("/api/v1/visits", json={"ua": ua, "ip": "198.51.100.73", "ab": "junk", "path": "/"})
+    async with SessionLocal() as session:
+        groups = {u.ab for u in (await session.scalars(select(User).where(User.ab != ""))).all()}
+    assert {"paywall", "email"} <= groups
+    data = (await client.get("/api/v1/funnel", params={"key": "stats-key", "period": "today"})).json()
+    rows = {r["ab"]: r for r in data["by_ab"]}
+    assert rows["paywall"]["paywall"] >= 1 and rows["email"]["email_gate"] >= 1
+    assert "junk" not in rows and "paid_by_group" in rows["email"]
+

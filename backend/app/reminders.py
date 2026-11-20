@@ -134,7 +134,7 @@ async def remind_once(now: datetime | None = None) -> int:
             user = await session.get(User, grant.user_id)
             left = await _left(session, grant.user_id, grant.slug, grant.starts_at)
             outcome = "skipped"
-            if user and left > 0 and not (vip_until and vip_until > now) and not user.is_test:
+            if user and user.email and left > 0 and not (vip_until and vip_until > now) and not user.is_test:
                 payment = await session.get(Payment, grant.payment_id) if grant.payment_id else None
                 lang = payment.locale if payment and payment.locale in TEXT else "en"
                 hours_left = max(1, round((grant.ends_at - now).total_seconds() / 3600))

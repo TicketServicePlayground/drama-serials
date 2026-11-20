@@ -58,6 +58,7 @@ services:
       SERIES_PASS_HOURS: ${SERIES_PASS_HOURS:-24}
       # Episodes 1..N of every series play free, without signing in.
       FREE_EPISODES: ${FREE_EPISODES:-7}
+      EMAIL_BONUS_EPISODES: ${EMAIL_BONUS_EPISODES:-3}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
       # Meta Conversions API (server-side Purchase); same pixel id as the site's.

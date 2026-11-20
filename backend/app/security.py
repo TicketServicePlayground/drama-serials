@@ -65,3 +65,34 @@ def read_token(token: str) -> uuid.UUID | None:
         return uuid.UUID(payload["sub"])
     except (jwt.PyJWTError, KeyError, ValueError):
         return None
+
+
+def return_key(payment_id: uuid.UUID) -> str:
+    """Signs a payment id for the link the provider sends the payer back to. A guest who paid in
+    one browser (Instagram's, say) and comes back in another gets signed in by this key."""
+    mac = hmac.new(settings.jwt_secret.encode(), f"return:{payment_id}".encode(), hashlib.sha256)
+    return mac.hexdigest()[:32]
+
+
+def check_return_key(payment_id: uuid.UUID, key: str) -> bool:
+    return hmac.compare_digest(return_key(payment_id), key or "")
+
+
+# A sign-in link to carry the session to another browser (Instagram's -> Safari, say).
+TRANSFER_TTL = timedelta(days=7)
+
+
+def issue_transfer_token(user_id: uuid.UUID) -> str:
+    now = datetime.now(UTC)
+    payload = {"sub": str(user_id), "purpose": "transfer", "iat": now, "exp": now + TRANSFER_TTL}
+    return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+
+
+def read_transfer_token(token: str) -> uuid.UUID | None:
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+        if payload.get("purpose") != "transfer":
+            return None
+        return uuid.UUID(payload["sub"])
+    except (jwt.PyJWTError, KeyError, ValueError):
+        return None

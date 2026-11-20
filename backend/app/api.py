@@ -34,13 +34,14 @@ from app.models import (
     Provider,
     User,
 )
-from app.products import launch_active, launch_ends_at, price_for, products
+from app.products import in_country, launch_active, launch_ends_at, price_for, products
 from app.providers import PROVIDER_BY_METHOD, ProviderError, provider
 from app.security import (
     hash_password,
     issue_token,
     normalize_email,
     read_token,
+    return_key,
     valid_password,
     verify_password,
 )
@@ -53,6 +54,12 @@ def client_ip(request: Request) -> str:
     which sends X-Forwarded-For = the IP nginx saw (lib/api.ts clientIp)."""
     forwarded = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
     return forwarded or (request.client.host if request.client else "")
+
+
+def visitor_country(request: Request) -> str:
+    """ISO code of the visitor's country, sent by the site from nginx GeoIP (lib/api.ts)."""
+    country = request.headers.get("x-country", "").strip().upper()
+    return country if re.fullmatch(r"[A-Z]{2}", country) else ""
 
 
 router = APIRouter(prefix="/api/v1")
@@ -109,6 +116,11 @@ async def current_user(
 CurrentUser = Annotated[User | None, Depends(current_user)]
 
 
+def who(user: User) -> str:
+    """How a user is named in team notifications: the email, or a guest marker."""
+    return user.email or f"гость {str(user.id)[:8]}"
+
+
 async def account(session: AsyncSession, user: User) -> dict:
     until = await access_until(session, user.id)
     active = until is not None and until > datetime.now(UTC)
@@ -121,7 +133,7 @@ async def account(session: AsyncSession, user: User) -> dict:
     }
 
 
-def price_list() -> list[dict]:
+def price_list(country: str = "") -> list[dict]:
     """Products in the paywall's order, with the price charged now and the regular one."""
     return [
         {
@@ -129,19 +141,19 @@ def price_list() -> list[dict]:
             "kind": product.kind,
             "days": product.days,
             "hours": product.hours,
-            "price": price_for(product),
-            "regular_price": product.regular_price,
+            "price": price_for(product, country=country),
+            "regular_price": in_country(product.regular_price, country),
         }
         for product in products().values()
     ]
 
 
-def pricing() -> dict:
+def pricing(country: str = "") -> dict:
     ends = launch_ends_at()
     return {
         "currency": "IDR",
         "methods": settings.enabled_methods,
-        "products": price_list(),
+        "products": price_list(country),
         # The launch price and its real end date; after it the regular prices apply.
         "launch": {
             "active": launch_active(),
@@ -149,6 +161,7 @@ def pricing() -> dict:
             "discount_percent": settings.launch_discount_percent,
         },
         "free_episodes": settings.free_episodes,
+        "email_bonus_episodes": settings.email_bonus_episodes,
     }
 
 
@@ -163,6 +176,7 @@ def payment_view(payment: Payment) -> dict:
         "next": payment.return_slug,
         "product": payment.product,
         "episode": payment.target_episode,
+        "slug": payment.target_slug,
     }
 
 
@@ -172,10 +186,10 @@ async def public_config() -> dict:
 
 
 @router.post("/offer")
-async def open_offer():
+async def open_offer(request: Request):
     """What the paywall shows: plans, prices charged now and the launch price's end date. Open
     to visitors without an account: they sign up with their email when they pay."""
-    return pricing()
+    return pricing(visitor_country(request))
 
 
 @router.get("/me/purchases")
@@ -236,17 +250,21 @@ async def play(
 
     now = datetime.now(UTC)
     free = 0 < episode <= settings.free_episodes
+    # The next few play for an email: the feed asks for one instead of the paywall.
+    bonus = settings.free_episodes < episode <= settings.free_episodes + settings.email_bonus_episodes
     if user is None and not free:
-        return error("unauthorized", 401)
+        return error("email_required", 403) if bonus else error("unauthorized", 401)
     until = await access_until(session, user.id) if user else None
     vip = until is not None and until > now
-    entitled = free or vip
+    entitled = free or vip or (bonus and user is not None and bool(user.email))
     if not entitled and user is not None:
         series_until = await series_access_until(session, user.id, slug)
         entitled = (series_until is not None and series_until > now) or (
             not vip_only and await has_episode(session, user.id, slug, episode)
         )
     if not entitled:
+        if bonus and user is not None and not user.email:
+            return error("email_required", 403)
         return error("payment_required", 402)
     logger.info(
         "audit play user=%s episode=%s/%s ip=%s", user.id if user else "-", slug, episode, client_ip(request)
@@ -261,6 +279,8 @@ async def play(
         return error("video_not_ready", 404)
     return {
         "url": media.signed_url(item.object_key),
+        # A lighter 480p copy, when one has been made: the player's low quality.
+        "sd_url": media.signed_url(media.sd_key(item.object_key)) if media.has_sd(item.object_key) else None,
         "duration": item.duration_seconds,
         "expires_in": settings.play_url_ttl_seconds,
         # VIP points given for watching today (once a day; 0 otherwise).
@@ -299,7 +319,7 @@ async def register(body: Registration, request: Request, session: Session):
 async def login(body: Credentials, request: Request, session: Session):
     email = normalize_email(body.email)
     user = await session.scalar(select(User).where(User.email == email)) if email else None
-    if user is None or not verify_password(body.password, user.password_hash):
+    if user is None or not user.password_hash or not verify_password(body.password, user.password_hash):
         logger.info("audit login-failed email=%s ip=%s", email or body.email[:80], client_ip(request))
         return error("bad_credentials", 401)
     logger.info("audit login user=%s email=%s ip=%s", user.id, user.email, client_ip(request))
@@ -326,7 +346,13 @@ async def start_payment(body: NewPayment, request: Request, user: CurrentUser, s
     if body.method not in settings.enabled_methods:
         return error("method_unavailable", 400)
     method = PaymentMethod(body.method)
+    # Cards (DOKU) need the payer's email; QRIS and SBP go without (guest accounts).
+    if method == PaymentMethod.CARD and not user.email:
+        return error("email_required", 400)
     product = products()[body.product]
+    from app.visits import link_payer  # app.visits imports this module
+
+    await link_payer(session, user, client_ip(request), body.ad.ua if body.ad and body.ad.ua else "")
     locale = body.locale if body.locale in LOCALES else "en"
     next_slug = body.next if body.next and SLUG_RE.match(body.next) else None
     target_slug = target_episode = None
@@ -345,7 +371,8 @@ async def start_payment(body: NewPayment, request: Request, user: CurrentUser, s
         target_slug, target_episode = body.slug, body.episode
         if await has_episode(session, user.id, target_slug, target_episode):
             return error("already_unlocked", 409)
-    amount = price_for(product)
+    country = visitor_country(request)
+    amount = price_for(product, country=country)
 
     recent = await session.scalar(
         select(Payment)
@@ -373,7 +400,7 @@ async def start_payment(body: NewPayment, request: Request, user: CurrentUser, s
         target_slug=target_slug,
         target_episode=target_episode,
         amount=amount,
-        list_amount=product.regular_price,
+        list_amount=in_country(product.regular_price, country),
         currency="IDR",
         method=method,
         provider=PROVIDER_BY_METHOD[method],
@@ -391,6 +418,8 @@ async def start_payment(body: NewPayment, request: Request, user: CurrentUser, s
         {"lang": locale}
         | ({"next": next_slug} if next_slug else {})
         | ({"play": target_episode} if target_episode else {})
+        # A guest has no password: the key signs them in wherever the provider sends them back.
+        | ({"k": return_key(payment.id)} if not user.email else {})
     )
     return_url = f"{settings.public_site_url}/payment/{payment.id}?{urlencode(query)}"
     try:
@@ -398,7 +427,7 @@ async def start_payment(body: NewPayment, request: Request, user: CurrentUser, s
     except ProviderError:
         payment.status = PaymentStatus.FAILED
         await session.commit()
-        notify.attempt_failed(payment, user.email)
+        notify.attempt_failed(payment, who(user))
         return error("payment_unavailable", 502)
 
     payment.provider_payment_id = checkout.provider_payment_id
@@ -410,7 +439,7 @@ async def start_payment(body: NewPayment, request: Request, user: CurrentUser, s
         "audit payment-opened payment=%s user=%s product=%s amount=%s provider=%s ref=%s ip=%s",
         payment.id, user.id, payment.product, payment.amount, payment.provider, payment.provider_ref, client_ip(request),
     )
-    notify.attempt(payment, user.email)
+    notify.attempt(payment, who(user))
     return payment_view(payment)
 
 

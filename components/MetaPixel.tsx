@@ -40,8 +40,8 @@ export function MetaPixel({ pixelId }: { pixelId: string }) {
       document.head.appendChild(script);
       window.fbq!("init", pixelId);
       window.fbq!("track", "PageView");
-      for (const [event, params, eventID] of window.dsPixelQueue?.splice(0) ?? []) {
-        window.fbq!("track", event, params, eventID ? { eventID } : undefined);
+      for (const [event, params, eventID, custom] of window.dsPixelQueue?.splice(0) ?? []) {
+        window.fbq!(custom ? "trackCustom" : "track", event, params, eventID ? { eventID } : undefined);
       }
     };
     load();

@@ -57,6 +57,7 @@ def purchase_event(payment: Payment) -> dict:
             "value": payment.amount,
             "currency": payment.currency,
             "content_name": payment.product,
+            "content_type": "product",
             **({"content_ids": [payment.target_slug]} if payment.target_slug else {}),
         },
     }

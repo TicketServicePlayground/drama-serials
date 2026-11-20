@@ -25,6 +25,7 @@ os.environ["REGULAR_YEAR_IDR"] = "398000"
 os.environ["LAUNCH_ENDS_AT"] = "2099-01-01T00:00:00+07:00"
 # Most tests are about paid episodes; test_free_episodes turns free ones on.
 os.environ["FREE_EPISODES"] = "0"
+os.environ["EMAIL_BONUS_EPISODES"] = "0"
 
 import asyncpg  # noqa: E402
 import httpx  # noqa: E402

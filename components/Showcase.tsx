@@ -25,10 +25,12 @@ interface AuthState {
   serial: SerialCard | null;
 }
 
-export function Showcase({ locale, serials, email, initialAuthSlug, initialCollections, footer }: {
+export function Showcase({ locale, serials, email, signedIn = email !== null, initialAuthSlug, initialCollections, footer }: {
   locale: Locale;
   serials: SerialCard[];
   email: string | null;
+  /** Signed in, possibly as a guest without an email (paid by QRIS/SBP). */
+  signedIn?: boolean;
   /** Set when a signed-out visitor was bounced from a series page. */
   initialAuthSlug: string | null;
   initialCollections: { favorites: string[]; likes: string[] };
@@ -76,7 +78,7 @@ export function Showcase({ locale, serials, email, initialAuthSlug, initialColle
   };
 
   const like = (serial: SerialCard) => {
-    if (email) toggleLike(serial.slug);
+    if (signedIn) toggleLike(serial.slug);
     else showAuth("like", serial);
   };
 
@@ -97,10 +99,8 @@ export function Showcase({ locale, serials, email, initialAuthSlug, initialColle
     router.refresh();
   }
 
-  const openVip = () => {
-    if (email) router.push(withLocale("/vip", locale));
-    else showAuth("vip", null);
-  };
+  // Guests too: the VIP page takes an email at payment, no sign-up first.
+  const openVip = () => router.push(withLocale("/vip", locale));
 
   const showList = () => {
     setTab("list");
@@ -123,13 +123,13 @@ export function Showcase({ locale, serials, email, initialAuthSlug, initialColle
             <LanguageSwitcher locale={locale} />
             <button
               type="button"
-              onClick={email ? () => router.push(withLocale("/profile", locale)) : openAuth}
+              onClick={signedIn ? () => router.push(withLocale("/profile", locale)) : openAuth}
               className={`hidden h-8 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-focus sm:inline-flex ${
-                email ? "bg-surface text-foreground hover:bg-surface-secondary" : "bg-accent text-accent-foreground hover:opacity-90"
+                signedIn ? "bg-surface text-foreground hover:bg-surface-secondary" : "bg-accent text-accent-foreground hover:opacity-90"
               }`}
             >
-              {email && <UserIcon className="size-4" />}
-              {email ? t.nav.profile : t.signIn}
+              {signedIn && <UserIcon className="size-4" />}
+              {signedIn ? t.nav.profile : t.signIn}
             </button>
           </div>
         </div>
@@ -190,7 +190,7 @@ export function Showcase({ locale, serials, email, initialAuthSlug, initialColle
                 locale={locale}
                 priority={index < 4}
                 favorite={favorites.has(serial.slug)}
-                liked={Boolean(email) && likes.has(serial.slug)}
+                liked={signedIn && likes.has(serial.slug)}
                 onOpen={() => open(serial)}
                 onLike={() => like(serial)}
                 onToggleFavorite={() => toggleFavorite(serial.slug)}
@@ -238,7 +238,7 @@ export function Showcase({ locale, serials, email, initialAuthSlug, initialColle
         </button>
         <button
           type="button"
-          onClick={email ? () => router.push(withLocale("/profile", locale)) : openAuth}
+          onClick={signedIn ? () => router.push(withLocale("/profile", locale)) : openAuth}
           className="flex cursor-pointer flex-col items-center gap-0.5 text-xs text-muted outline-none focus-visible:text-foreground"
         >
           <UserIcon className="size-6" />{t.nav.profile}

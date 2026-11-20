@@ -356,6 +356,24 @@ async def test_launch_prices_until_the_end_date_regular_after(client, gateways, 
     assert {p["id"]: p["price"] for p in offer["products"]}["week"] == 19800
 
 
+async def test_us_visitors_pay_double(client, gateways):
+    headers = await signup(client)
+    us = {**headers, "X-Country": "US"}
+    offer = (await client.post("/api/v1/offer", headers=us)).json()
+    assert {p["id"]: (p["price"], p["regular_price"]) for p in offer["products"]}["month"] == (59800, 119600)
+    # Elsewhere, or with no country, the usual prices.
+    other = (await client.post("/api/v1/offer", headers={**headers, "X-Country": "ID"})).json()
+    assert {p["id"]: p["price"] for p in other["products"]}["month"] == 29900
+    month = (
+        await client.post("/api/v1/payments", json={"method": "QRIS", "product": "month"}, headers=us)
+    ).json()
+    assert month["amount"] == 59800
+    from app.db import SessionLocal
+
+    async with SessionLocal() as session:
+        assert (await session.get(Payment, uuid.UUID(month["id"]))).list_amount == 119600
+
+
 async def test_series_day_opens_one_series_for_24_hours(client, gateways, monkeypatch):
     from tests.test_points import media_ready
 
@@ -408,6 +426,30 @@ async def test_free_episodes_play_without_paying_or_signing_in(client, monkeypat
     assert (await client.get("/api/v1/episodes/free-show/8/play", headers=headers)).status_code == 402
     monkeypatch.setattr(settings, "free_episodes", 5)
     assert (await client.get("/api/v1/episodes/free-show/7/play", headers=headers)).status_code == 402
+
+
+async def test_email_bonus_episodes_need_an_email_not_a_payment(client, monkeypatch):
+    from tests.test_points import media_ready
+
+    await media_ready(monkeypatch, slug="bonus-show", episodes=(7, 8, 10, 11))
+    monkeypatch.setattr(settings, "free_episodes", 7)
+    monkeypatch.setattr(settings, "email_bonus_episodes", 3)
+    assert (await client.get("/api/v1/config")).json()["email_bonus_episodes"] == 3
+    # Signed out: the bonus ones ask for an email, the ones after them for signing in as before.
+    assert (await client.get("/api/v1/episodes/bonus-show/8/play")).status_code == 403
+    assert (await client.get("/api/v1/episodes/bonus-show/8/play")).json()["error"] == "email_required"
+    assert (await client.get("/api/v1/episodes/bonus-show/11/play")).status_code == 401
+    # A guest (paid by QRIS before, no email) is asked for one too.
+    guest = (await client.post("/api/v1/auth/guest")).json()["token"]
+    guest_headers = {"Authorization": f"Bearer {guest}"}
+    assert (await client.get("/api/v1/episodes/bonus-show/10/play", headers=guest_headers)).status_code == 403
+    # An email, given at the feed: the bonus ones play, the next one still needs paying.
+    quick = await client.post("/api/v1/auth/quick", json={"email": f"feed-{uuid.uuid4().hex[:8]}@example.com"})
+    assert quick.status_code == 200, quick.text
+    headers = {"Authorization": f"Bearer {quick.json()['token']}"}
+    assert (await client.get("/api/v1/episodes/bonus-show/8/play", headers=headers)).status_code == 200
+    assert (await client.get("/api/v1/episodes/bonus-show/10/play", headers=headers)).status_code == 200
+    assert (await client.get("/api/v1/episodes/bonus-show/11/play", headers=headers)).status_code == 402
 
 
 async def test_month_pass_gives_thirty_days(client, gateways):
@@ -505,6 +547,7 @@ async def test_single_episode_unlock_and_play(client, gateways, monkeypatch):
     play = (await client.get("/api/v1/episodes/contract-bride/2/play", headers=headers)).json()
     assert play == {
         "url": "https://signed/video/contract-bride/2.mp4",
+        "sd_url": None,
         "duration": 95,
         "expires_in": settings.play_url_ttl_seconds,
         "points_awarded": 0,  # a bought episode is not VIP
@@ -529,6 +572,11 @@ async def test_single_episode_unlock_and_play(client, gateways, monkeypatch):
     url = lambda q: client.get(f"/api/v1/episodes/contract-bride/2/play{q}", headers=headers)  # noqa: E731
     assert (await url("?lang=ru")).json()["url"] == "https://signed/video/contract-bride/ru/2.mp4"
     assert (await url("?lang=es")).json()["url"] == "https://signed/video/contract-bride/2.mp4"
+
+    # A 480p copy, once the scanner has seen it.
+    monkeypatch.setattr(media_module, "_sd_keys", {"video-480/contract-bride/ru/2.mp4"})
+    assert (await url("?lang=ru")).json()["sd_url"] == "https://signed/video-480/contract-bride/ru/2.mp4"
+    assert (await url("?lang=es")).json()["sd_url"] is None
 
 
 async def test_media_scan_reads_new_videos_once(monkeypatch):
@@ -556,9 +604,13 @@ async def test_media_scan_reads_new_videos_once(monkeypatch):
         probes.append(key)
         return 101
 
-    monkeypatch.setattr(media_module, "_list_videos", lambda: objects)
+    sd = [{"Key": "video-480/the-girl-upstairs/1.mp4", "ETag": '"eee"', "Size": 5}]
+    monkeypatch.setattr(media_module, "_list_videos", lambda prefix=None: sd if prefix else objects)
     monkeypatch.setattr(media_module, "probe_duration", probe)
     assert await media_module.scan_once() == 2
+    # The 480p copy is not an episode of its own, only a lighter version of one.
+    assert media_module.has_sd("video/the-girl-upstairs/1.mp4")
+    assert not media_module.has_sd("video/the-girl-upstairs/id/2.mp4")
     assert await media_module.scan_once() == 0  # unchanged etag: not probed again
     objects[0]["ETag"] = '"ccc"'
     assert await media_module.scan_once() == 1

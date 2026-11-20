@@ -84,12 +84,17 @@ class Settings(BaseSettings):
     regular_year_idr: int = 1999000
     # The first moment the regular prices apply (ISO, with offset); empty = no launch price.
     launch_ends_at: str = "2027-01-01T00:00:00+07:00"
+    # Prices times this in some countries (visitor IP country from nginx GeoIP), e.g. "US=2":
+    # too low a price puts American viewers off.
+    country_price_factors: str = "US=2"
     # The "-77%" badge next to the launch prices.
     launch_discount_percent: int = 77
     # "One series for a day": all episodes of one series for this long after paying.
     series_pass_hours: int = 24
     # The first episodes of every series play without paying or signing in.
     free_episodes: int = 7
+    # The episodes after the free ones that play for anyone who leaves an email (signed up).
+    email_bonus_episodes: int = 3
     # Kept for old rows (users.offer_expires_at); the 3-hour offer is no longer used.
     offer_hours: int = 3
     # VIP points: given once a day to a VIP who opened an episode; this many buy one VIP day.

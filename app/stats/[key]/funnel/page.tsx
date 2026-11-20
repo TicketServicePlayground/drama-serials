@@ -9,7 +9,7 @@ import { findSerial } from "@/lib/catalog";
 export const metadata: Metadata = { title: "Воронка", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-type Step = "visit" | "cover" | "auth_open" | "signup" | "series" | "episode" | "paywall" | "checkout" | "paid";
+type Step = "visit" | "cover" | "auth_open" | "signup" | "series" | "episode" | "email_gate" | "paywall" | "checkout" | "paid";
 type Counts = Record<Step, number> & { revenue: number };
 type Attributed = { paid_by_source: number; revenue_by_source: number };
 interface Funnel {
@@ -17,7 +17,6 @@ interface Funnel {
   period: string;
   country: string;
   countries: string[];
-  tests: boolean;
   steps: Step[];
   total: Counts;
   by_source: (Counts & { source: string })[];
@@ -34,6 +33,7 @@ const STEP: Record<Step, [string, string]> = {
   signup: ["Зарегистрировались", "рег."],
   series: ["Открыли сериал", "сериал"],
   episode: ["Нажали на серию", "серия"],
+  email_gate: ["Попросили email", "email"],
   paywall: ["Увидели тарифы", "тарифы"],
   checkout: ["Начали оплату", "оплата"],
   paid: ["Оплатили", "оплатили"],
@@ -50,17 +50,18 @@ const seriesName = (slug: string) => (slug === "vip" ? "VIP-страница" : 
 
 export default async function FunnelPage({ params, searchParams }: {
   params: Promise<{ key: string }>;
-  searchParams: Promise<{ period?: string; country?: string; tests?: string }>;
+  searchParams: Promise<{ period?: string; country?: string }>;
 }) {
-  const [{ key }, { period = "7d", country = "", tests = "" }] = await Promise.all([params, searchParams]);
-  const query = new URLSearchParams({ key, period, country, tests: tests === "1" ? "true" : "false" });
+  const [{ key }, { period = "7d", country = "" }] = await Promise.all([params, searchParams]);
+  // Everything as it is: test accounts and the team's visits are counted like anyone's.
+  const query = new URLSearchParams({ key, period, country });
   const { status, data } = await apiFetch<Funnel>(`/funnel?${query}`);
   if (status !== 200) notFound();
 
   const base = `/stats/${encodeURIComponent(key)}`;
   // Links keep the other filters.
   const href = (change: Record<string, string>) => {
-    const next = { period: data.period, country: data.country, tests: data.tests ? "1" : "", ...change };
+    const next = { period: data.period, country: data.country, ...change };
     const qs = new URLSearchParams(Object.entries(next).filter(([, v]) => v) as [string, string][]);
     return `${base}/funnel?${qs}`;
   };
@@ -108,9 +109,6 @@ export default async function FunnelPage({ params, searchParams }: {
             {code || "все"}
           </Link>
         ))}
-        <Link href={href({ tests: data.tests ? "" : "1" })} className="ml-auto text-xs text-muted underline-offset-2 hover:underline">
-          {data.tests ? "☑" : "☐"} показать тестовые
-        </Link>
       </div>
 
       <section>

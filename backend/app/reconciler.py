@@ -69,7 +69,7 @@ async def reconcile_once() -> None:
                 payment.status = PaymentStatus.EXPIRED
                 await session.commit()
                 user = await session.get(User, payment.user_id)
-                notify.outcome(payment, user.email if user else "?")
+                notify.outcome(payment, (user.email or f"гость {str(user.id)[:8]}") if user else "?")
 
 
 async def run_forever() -> None:

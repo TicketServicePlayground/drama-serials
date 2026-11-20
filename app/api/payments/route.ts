@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { apiFetch, clientIp } from "@/lib/api";
+import { apiFetch, clientIp, visitorCountry } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { isVipSerial } from "@/lib/catalog";
 
@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     method: "POST",
     token,
     ip: clientIp(request),
+    country: visitorCountry(request),
     body: {
       method: body?.method,
       product: body?.product,

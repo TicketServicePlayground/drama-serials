@@ -77,14 +77,14 @@ class IxpayProvider:
     def reference(self, payment: Payment) -> str:
         return f"{REF_PREFIX}{payment.id}"
 
-    async def open(self, payment: Payment, *, payer_email: str, return_url: str) -> Checkout:
+    async def open(self, payment: Payment, *, payer_email: str | None, return_url: str) -> Checkout:
         body = {
             "payment_method": "sbp",
             "idempotency_key": payment.provider_ref,
             "return_url": return_url,
             "auto_redirect": True,
             "redirect_delay_seconds": 3,
-            "notes": f"{products()[payment.product].title} · {payer_email}",
+            "notes": " · ".join(filter(None, [products()[payment.product].title, payer_email])),
         }
         try:
             async with _client() as client:

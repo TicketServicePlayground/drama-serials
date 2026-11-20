@@ -174,7 +174,7 @@ async def _notify_outcome(session: AsyncSession, payment: Payment) -> None:
         until = await series_access_until(session, payment.user_id, payment.target_slug)
     else:
         until = None
-    notify.outcome(payment, user.email if user else "?", until)
+    notify.outcome(payment, (user.email or f"гость {str(user.id)[:8]}") if user else "?", until)
 
 
 async def refresh_payment(session: AsyncSession, payment: Payment) -> Payment:

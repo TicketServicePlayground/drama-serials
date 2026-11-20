@@ -4,12 +4,13 @@ import { Modal } from "@heroui/react";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { PaywallPanel, type PaywallTarget, type SeriesOption } from "./PaywallPanel";
 
-export function PaywallModal({ locale, target, series, signedIn = true, onSignIn, onClose }: {
+export function PaywallModal({ locale, target, series, signedIn = true, hasEmail = signedIn, onSignIn, onClose }: {
   locale: Locale;
   /** null = closed. */
   target: PaywallTarget | null;
   series: SeriesOption[];
   signedIn?: boolean;
+  hasEmail?: boolean;
   onSignIn?: () => void;
   onClose: () => void;
 }) {
@@ -24,7 +25,7 @@ export function PaywallModal({ locale, target, series, signedIn = true, onSignIn
               <Modal.Heading>{t.paywall.title}</Modal.Heading>
             </Modal.Header>
             <Modal.Body>
-              {target && <PaywallPanel locale={locale} target={target} series={series} signedIn={signedIn} onSignIn={onSignIn} />}
+              {target && <PaywallPanel locale={locale} target={target} series={series} signedIn={signedIn} hasEmail={hasEmail} onSignIn={onSignIn} />}
             </Modal.Body>
           </Modal.Dialog>
         </Modal.Container>

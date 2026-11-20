@@ -1,3 +1,4 @@
+import { BrowserTransfer } from "@/components/BrowserTransfer";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -78,7 +79,7 @@ export default async function ProfilePage() {
 
       <section className="mt-4 rounded-2xl bg-surface p-4">
         <p className="text-xs text-muted">{t.profile.account}</p>
-        <p className="mt-0.5 font-medium break-all">{account.email}</p>
+        <p className="mt-0.5 font-medium break-all">{account.email ?? "—"}</p>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           {account.has_access && account.access_until ? (
             <p className="flex items-center gap-2 text-sm text-gold">
@@ -105,6 +106,8 @@ export default async function ProfilePage() {
           </Link>
         </div>
       </section>
+
+      <BrowserTransfer locale={locale} className="mt-4" />
 
       {pointsStatus === 200 && <PointsCard locale={locale} points={points} isVip={account.has_access} />}
 

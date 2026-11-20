@@ -1,7 +1,7 @@
 // The site's own counter (backend/app/visits.py): page views from components/VisitCounter and
 // funnel clicks from here. No cookies; the API keeps a daily hash of IP + browser.
 
-export type FunnelEvent = "cover" | "auth_open" | "episode" | "paywall";
+export type FunnelEvent = "cover" | "auth_open" | "episode" | "email_gate" | "paywall";
 
 export interface VisitBeacon {
   path: string;
@@ -17,9 +17,26 @@ export interface VisitBeacon {
   target?: string;
 }
 
+const CLIENT_ID_KEY = "vid";
+
+/** A random id kept in this browser: lets the counter see the same browser on another day. */
+function clientId(): string {
+  try {
+    let id = localStorage.getItem(CLIENT_ID_KEY);
+    if (!id || !/^[a-f0-9]{16,32}$/.test(id)) {
+      id = Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, "0")).join("");
+      localStorage.setItem(CLIENT_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    // Storage is blocked (private mode): the daily hash on the server stands in.
+    return "";
+  }
+}
+
 export function sendVisit(beacon: VisitBeacon): void {
   if (typeof window === "undefined" || navigator.webdriver || window.location.pathname.startsWith("/stats")) return;
-  const payload = new Blob([JSON.stringify(beacon)], { type: "application/json" });
+  const payload = new Blob([JSON.stringify({ ...beacon, cid: clientId() })], { type: "application/json" });
   if (!navigator.sendBeacon?.("/api/v", payload)) {
     fetch("/api/v", { method: "POST", body: payload, keepalive: true }).catch(() => {});
   }

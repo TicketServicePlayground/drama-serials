@@ -71,6 +71,7 @@ export default async function SeriesPage({ params, searchParams }: Props) {
         initialCollections={collections}
         account={account}
         freeEpisodes={config.free_episodes}
+        emailBonus={config.email_bonus_episodes ?? 0}
         seriesOptions={getCatalog(locale)
           .filter((s) => !s.vip)
           .map((s) => ({ slug: s.slug, title: s.title }))}

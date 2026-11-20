@@ -4,6 +4,9 @@ Uploads follow <media_prefix><series-slug>/[<lang>/]<episode-number>.<mp4|webm>:
 <lang> folder holds a dubbed cut (scripts/import-sheet.mjs copies them there). A scanner lists the bucket,
 reads each new or changed file's duration with ffprobe (headers only, through a signed URL)
 and records it in episode_media. Viewers with access get a signed URL that expires.
+
+Lighter 480p copies (backend/scripts/make_sd.py) mirror that layout under <media_prefix minus
+the slash>-480/, e.g. video/ → video-480/; the player offers them as a lower quality.
 """
 
 import asyncio
@@ -55,10 +58,27 @@ def signed_url(key: str, ttl: int | None = None) -> str:
     )
 
 
-def _list_videos() -> list[dict]:
+def sd_prefix() -> str:
+    return settings.media_prefix.rstrip("/") + "-480/"
+
+
+def sd_key(key: str) -> str:
+    """Where the 480p copy of an original video lives."""
+    return sd_prefix() + key.removeprefix(settings.media_prefix)
+
+
+# Keys of the 480p copies found by the last scan.
+_sd_keys: set[str] = set()
+
+
+def has_sd(key: str) -> bool:
+    return sd_key(key) in _sd_keys
+
+
+def _list_videos(prefix: str | None = None) -> list[dict]:
     found, token = [], None
     while True:
-        kwargs = {"Bucket": settings.media_bucket, "Prefix": settings.media_prefix}
+        kwargs = {"Bucket": settings.media_bucket, "Prefix": prefix or settings.media_prefix}
         if token:
             kwargs["ContinuationToken"] = token
         page = _s3().list_objects_v2(**kwargs)
@@ -98,6 +118,8 @@ async def scan_once() -> int:
     if not settings.media_enabled:
         return 0
     objects = await asyncio.to_thread(_list_videos)
+    global _sd_keys
+    _sd_keys = {obj["Key"] for obj in await asyncio.to_thread(_list_videos, sd_prefix())}
     changed = 0
     async with SessionLocal() as session:
         known = {

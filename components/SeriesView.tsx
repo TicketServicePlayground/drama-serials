@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { Episode, Serial } from "@/lib/catalog";
 import type { AccountView } from "@/lib/billing-types";
 import { getDictionary, withLocale, type Locale } from "@/lib/i18n";
-import { trackPixel } from "@/lib/pixel";
+import { trackPixel, trackViewing } from "@/lib/pixel";
 import { trackEvent } from "@/lib/track";
 import { CdnImage } from "./CdnImage";
 import { EpisodeList } from "./EpisodeList";
@@ -15,7 +15,8 @@ import { CrownIcon } from "./icons";
 import { LocalDate } from "./LocalDate";
 import { PaywallModal } from "./PaywallModal";
 import type { PaywallTarget, SeriesOption } from "./PaywallPanel";
-import { PlayerModal } from "./PlayerModal";
+import { EmailGate } from "./EmailGate";
+import { EpisodeFeed } from "./EpisodeFeed";
 import { Stats } from "./Stats";
 import { useCollections } from "./useCollections";
 
@@ -33,13 +34,15 @@ function timeLeft(untilMs: number, nowMs: number): string {
  * rest need VIP, a one-series pass, or (not for VIP series) the episode bought on its own.
  * A locked episode asks a signed-out visitor to sign in first, then shows the paywall.
  */
-export function SeriesView({ serial, locale, initialCollections, account, freeEpisodes, seriesOptions, autoPlay }: {
+export function SeriesView({ serial, locale, initialCollections, account, freeEpisodes, emailBonus = 0, seriesOptions, autoPlay }: {
   serial: Serial;
   locale: Locale;
   initialCollections: { favorites: string[]; likes: string[] };
   /** null = signed out. */
   account: AccountView | null;
   freeEpisodes: number;
+  /** The episodes after the free ones that play for an email: a signed-out visitor gives one. */
+  emailBonus?: number;
   /** Series that can be bought for a day (paywall choice). */
   seriesOptions: SeriesOption[];
   /** Episode to open right away (back from paying for it). */
@@ -50,9 +53,14 @@ export function SeriesView({ serial, locale, initialCollections, account, freeEp
   const pathname = usePathname();
   const { favorites, likes, toggleFavorite, toggleLike } = useCollections(initialCollections);
   const [paywall, setPaywall] = useState<PaywallTarget | null>(null);
-  const [playing, setPlaying] = useState<Episode | null>(null);
+  // Episode number the full-screen feed opened at; null = closed.
+  const [feedAt, setFeedAt] = useState<number | null>(null);
   // Sign-in asked before the paywall: what to show once signed in.
   const [authFor, setAuthFor] = useState<PaywallTarget | null>(null);
+  // Episode that asked for an email (EmailGate); null = closed.
+  const [emailFor, setEmailFor] = useState<number | null>(null);
+  // Signing in from the email gate (that email already has an account): the episode to play after.
+  const [signInFor, setSignInFor] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -65,33 +73,40 @@ export function SeriesView({ serial, locale, initialCollections, account, freeEp
   const pass = passUntil > now;
   const owned = new Set((account?.episodes ?? []).filter((e) => e.slug === serial.slug).map((e) => e.episode));
   const isFree = (episode: Episode) => episode.number <= freeEpisodes;
+  // The next few after the free ones open for an email (any account that has one).
+  const isBonus = (episode: Episode) => episode.number > freeEpisodes && episode.number <= freeEpisodes + emailBonus;
+  const hasEmail = Boolean(account?.email);
   // VIP series need a pass; a single bought episode does not open them.
   const isLocked = (episode: Episode) =>
-    !isFree(episode) && !vip && !pass && (serial.vip || !owned.has(episode.number));
+    !isFree(episode) && !(isBonus(episode) && hasEmail) && !vip && !pass && (serial.vip || !owned.has(episode.number));
+  const needsEmail = (episode: Episode) => isLocked(episode) && isBonus(episode) && !hasEmail;
   const lastEpisode = serial.episodes[serial.episodes.length - 1]?.number;
 
   // No sign-up first: a signed-out visitor gives an email at paying (PaywallPanel).
   const openPaywall = useCallback((target: PaywallTarget) => setPaywall(target), []);
 
   const play = (episode: Episode) => {
-    trackEvent("episode", `${serial.slug}/${episode.number}`);
-    if (isLocked(episode)) openPaywall({ slug: serial.slug, episode: episode.number, vipOnly: serial.vip });
-    else setPlaying(episode);
+    if (needsEmail(episode)) {
+      // The feed opens behind the email form and plays on once the email is in.
+      setFeedAt(episode.number);
+      setEmailFor(episode.number);
+    } else if (isLocked(episode)) {
+      trackEvent("episode", `${serial.slug}/${episode.number}`);
+      openPaywall({ slug: serial.slug, episode: episode.number, vipOnly: serial.vip });
+    } else setFeedAt(episode.number);
   };
 
-  const needPayment = useCallback(
-    (episode: Episode) => {
-      setPlaying(null);
-      openPaywall({ slug: serial.slug, episode: episode.number, vipOnly: serial.vip });
-    },
-    [serial.slug, serial.vip, openPaywall],
-  );
+  // Swiped on to a locked episode: the email form (bonus ones) or the paywall opens over the feed.
+  const needPayment = (episode: Episode) => {
+    if (needsEmail(episode)) setEmailFor(episode.number);
+    else openPaywall({ slug: serial.slug, episode: episode.number, vipOnly: serial.vip });
+  };
 
   // Watched the last episode without VIP: offer VIP for every other series.
   const finished = useCallback(
     (episode: Episode) => {
       if (vip || episode.number !== lastEpisode) return;
-      setPlaying(null);
+      setFeedAt(null);
       openPaywall({ slug: serial.slug, upsell: true });
     },
     [vip, lastEpisode, serial.slug, openPaywall],
@@ -181,7 +196,6 @@ export function SeriesView({ serial, locale, initialCollections, account, freeEp
         locale={locale}
         likes={likes}
         isLocked={isLocked}
-        isFree={(episode) => isFree(episode) && !vip && !pass}
         onLike={toggleLike}
         onPlay={play}
       />
@@ -191,6 +205,7 @@ export function SeriesView({ serial, locale, initialCollections, account, freeEp
         target={paywall}
         series={seriesOptions}
         signedIn={account !== null}
+        hasEmail={Boolean(account?.email)}
         onSignIn={() => {
           trackEvent("auth_open", "pay");
           setAuthFor(paywall);
@@ -198,14 +213,52 @@ export function SeriesView({ serial, locale, initialCollections, account, freeEp
         }}
         onClose={() => setPaywall(null)}
       />
-      <PlayerModal
+      <EpisodeFeed
         locale={locale}
         slug={serial.slug}
-        episode={playing}
-        onClose={() => setPlaying(null)}
-        onPaymentRequired={needPayment}
-        onEnded={finished}
+        seriesTitle={serial.title}
+        episodes={serial.episodes}
+        start={feedAt}
+        isLocked={isLocked}
+        needsEmail={needsEmail}
+        onClose={() => setFeedAt(null)}
+        onLocked={needPayment}
+        onWatch={(episode) => {
+          trackEvent("episode", `${serial.slug}/${episode.number}`);
+          trackViewing(serial.slug, episode.number);
+        }}
+        onFinished={finished}
       />
+      <EmailGate
+        locale={locale}
+        slug={serial.slug}
+        episode={emailFor}
+        bonus={emailBonus}
+        onDone={() => {
+          // Signed in now: the account (with its email) comes back and the feed plays on.
+          setEmailFor(null);
+          router.refresh();
+        }}
+        onSignIn={() => {
+          setSignInFor(emailFor);
+          setEmailFor(null);
+        }}
+        onClose={() => setEmailFor(null)}
+      />
+      {signInFor !== null && (
+        <AuthModal
+          locale={locale}
+          isOpen
+          reason="watch"
+          initialMode="login"
+          serial={null}
+          onClose={() => setSignInFor(null)}
+          onSuccess={() => {
+            setSignInFor(null);
+            router.refresh();
+          }}
+        />
+      )}
       {authFor && (
         <AuthModal
           locale={locale}

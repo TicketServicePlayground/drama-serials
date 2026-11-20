@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
       lang: field("lang", 8),
       event: field("event", 20),
       target: field("target", 80),
+      cid: field("cid", 32),
       ip,
       ua: request.headers.get("user-agent") ?? "",
     },

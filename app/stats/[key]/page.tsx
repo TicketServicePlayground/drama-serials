@@ -8,7 +8,7 @@ import { findSerial } from "@/lib/catalog";
 export const metadata: Metadata = { title: "Статистика", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-interface Totals { visitors: number; views: number; signed_in: number; signups: number; paid: number; revenue: number }
+interface Totals { visitors: number; views: number; signed_in: number; signups: number; paid: number; revenue: number; sessions: number; returns: number }
 interface Top { name: string; views: number; visitors: number }
 interface Stats {
   timezone: string;
@@ -16,13 +16,13 @@ interface Stats {
   yesterday: Totals;
   week: Totals;
   month: Totals;
-  by_day: { day: string; visitors: number; views: number; signups: number; paid: number }[];
+  by_day: { day: string; visitors: number; views: number; signups: number; paid: number; sessions: number; returns: number }[];
   pages: Top[];
   referrers: Top[];
   utm: Top[];
   langs: Top[];
   devices: Top[];
-  recent: { at: string; visitor: string; path: string; referrer: string; utm_source: string; lang: string; device: string; signed_in: boolean }[];
+  recent: { at: string; visitor: string; path: string; referrer: string; utm_source: string; lang: string; device: string; signed_in: boolean; returned: boolean }[];
 }
 
 const DEVICE: Record<string, string> = { mobile: "телефон", tablet: "планшет", desktop: "компьютер" };
@@ -34,14 +34,12 @@ function pageName(path: string): string {
   return path;
 }
 
-export default async function StatsPage({ params, searchParams }: {
+export default async function StatsPage({ params }: {
   params: Promise<{ key: string }>;
-  searchParams: Promise<{ tests?: string }>;
 }) {
   const { key } = await params;
-  const tests = (await searchParams).tests === "1";
-  // Test accounts (TEST_EMAILS) and their visits are hidden unless asked for.
-  const { status, data } = await apiFetch<Stats>(`/stats?key=${encodeURIComponent(key)}&tests=${tests}`);
+  // Everything as it is: test accounts and the team's visits are counted like anyone's.
+  const { status, data } = await apiFetch<Stats>(`/stats?key=${encodeURIComponent(key)}`);
   if (status !== 200) notFound();
 
   const tz = data.timezone;
@@ -68,10 +66,7 @@ export default async function StatsPage({ params, searchParams }: {
       <header className="mb-5 flex items-baseline justify-between gap-3">
         <h1 className="font-display text-xl font-extrabold">Посетители</h1>
         <span className="flex gap-3 text-xs text-muted">
-          <a href={`/stats/${encodeURIComponent(key)}${tests ? "" : "?tests=1"}`} className="underline-offset-2 hover:underline">
-            {tests ? "☑" : "☐"} тестовые
-          </a>
-          <a href={`/stats/${encodeURIComponent(key)}/funnel${tests ? "?tests=1" : ""}`} className="underline-offset-2 hover:underline">воронка →</a>
+          <a href={`/stats/${encodeURIComponent(key)}/funnel`} className="underline-offset-2 hover:underline">воронка →</a>
           <a href="" className="underline-offset-2 hover:underline">обновлено {now} WITA ↻</a>
         </span>
       </header>
@@ -82,6 +77,7 @@ export default async function StatsPage({ params, searchParams }: {
             <p className="text-xs text-muted">{label}</p>
             <p className="mt-1 text-2xl font-bold tabular-nums">{t.visitors}</p>
             <p className="text-xs text-muted">посетителей · {t.views} просм.</p>
+            <p className="mt-1 text-xs tabular-nums">заходов {t.sessions} · повторных {t.returns}</p>
             <p className="mt-2 text-xs tabular-nums">
               рег. {t.signups} · опл. {t.paid}
               {t.revenue > 0 && <span className="text-muted"> · {formatIdr(t.revenue)}</span>}
@@ -97,6 +93,8 @@ export default async function StatsPage({ params, searchParams }: {
             <tr className="text-right">
               <th className="py-1 text-left font-normal">день</th>
               <th className="font-normal">посет.</th>
+              <th className="font-normal">заходы</th>
+              <th className="font-normal">повт.</th>
               <th className="font-normal">просм.</th>
               <th className="font-normal">рег.</th>
               <th className="font-normal">опл.</th>
@@ -107,6 +105,8 @@ export default async function StatsPage({ params, searchParams }: {
               <tr key={d.day} className={`border-t border-border text-right ${d.views === 0 ? "text-muted" : ""}`}>
                 <td className="py-1.5 text-left">{dayFmt.format(new Date(d.day))}</td>
                 <td>{d.visitors}</td>
+                <td>{d.sessions}</td>
+                <td>{d.returns}</td>
                 <td>{d.views}</td>
                 <td>{d.signups}</td>
                 <td>{d.paid}</td>
@@ -140,7 +140,7 @@ export default async function StatsPage({ params, searchParams }: {
 
       <section className="mt-6">
         <h2 className="mb-1 text-sm font-semibold">Последние просмотры</h2>
-        <p className="mb-2 text-xs text-muted">метка = один посетитель за день · ● вошёл в аккаунт</p>
+        <p className="mb-2 text-xs text-muted">метка = один посетитель за день · ● вошёл в аккаунт · ↻ повторный заход</p>
         {data.recent.length === 0 ? (
           <p className="text-xs text-muted">пока пусто</p>
         ) : (
@@ -150,6 +150,7 @@ export default async function StatsPage({ params, searchParams }: {
                 <div className="flex justify-between gap-3">
                   <span className="truncate">
                     {v.signed_in && <span className="text-success">● </span>}
+                    {v.returned && <span className="text-accent">↻ </span>}
                     {pageName(v.path)}
                   </span>
                   <span className="shrink-0 text-xs tabular-nums text-muted">{time.format(new Date(v.at))}</span>
@@ -168,7 +169,9 @@ export default async function StatsPage({ params, searchParams }: {
 
       <p className="mt-8 text-xs text-muted">
         Свой счётчик сайта, без cookie. Боты по User-Agent отсеяны; скрипты-сканеры с обычным браузером могут
-        попадать. Числа справа в списках: посетители · просмотры.
+        попадать. Числа справа в списках: посетители · просмотры. Заход — просмотры одного человека без
+        перерыва дольше 30 минут; повторный — заход того, кто уже был на сайте (в тот же день или раньше).
+        Возврат в другой день виден с 20 ноября: до этого счётчик не умел узнавать человека на следующий день.
       </p>
     </main>
   );

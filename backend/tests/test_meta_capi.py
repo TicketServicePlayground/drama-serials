@@ -46,7 +46,7 @@ async def test_paid_payment_sends_one_server_purchase(client, gateways, capi):  
     event = capi[0]["data"][0]
     assert event["event_name"] == "Purchase"
     assert event["event_id"] == paid["id"]  # same id as the browser pixel's eventID
-    assert event["custom_data"] == {"value": 9900, "currency": "IDR", "content_name": "week"}
+    assert event["custom_data"] == {"value": 9900, "currency": "IDR", "content_name": "week", "content_type": "product"}
     assert event["user_data"]["client_ip_address"] == "203.0.113.7"
     assert event["user_data"]["fbp"] == "fb.1.1700000000000.123"
     assert event["user_data"]["fbc"] == "fb.1.1700000000000.abc"

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { LegalFooter } from "@/components/LegalFooter";
 import { Showcase } from "@/components/Showcase";
-import { getSessionEmail } from "@/lib/auth";
+import { getAccount } from "@/lib/auth";
 import { findSerial, getCatalog, toCard } from "@/lib/catalog";
 import { getMediaDurations } from "@/lib/billing";
 import { readCollections } from "@/lib/collections-server";
@@ -19,9 +19,9 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 export default async function HomePage({ searchParams }: Props) {
-  const [locale, email, collections, { auth }, durations, views] = await Promise.all([
+  const [locale, account, collections, { auth }, durations, views] = await Promise.all([
     getLocale(),
-    getSessionEmail(),
+    getAccount(),
     readCollections(),
     searchParams,
     getMediaDurations(),
@@ -31,8 +31,9 @@ export default async function HomePage({ searchParams }: Props) {
     <Showcase
       locale={locale}
       serials={withRealViews(getCatalog(locale), views).map((serial) => toCard(serial, durations))}
-      email={email}
-      initialAuthSlug={!email && auth ? auth : null}
+      email={account?.email ?? null}
+      signedIn={account !== null}
+      initialAuthSlug={!account && auth ? auth : null}
       initialCollections={collections}
       footer={<LegalFooter locale={locale} className="mt-10" />}
     />

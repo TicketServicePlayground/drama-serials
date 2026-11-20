@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button, Spinner } from "@heroui/react";
-import { formatIdr, type OfferState, type PayMethod, type PriceView, type ProductId } from "@/lib/billing-types";
+import { formatApprox, formatIdr, type OfferState, type PayMethod, type PriceView, type ProductId } from "@/lib/billing-types";
 import { getDictionary, withLocale, type Locale } from "@/lib/i18n";
 import { trackPixel } from "@/lib/pixel";
 import { trackEvent } from "@/lib/track";
@@ -42,15 +42,19 @@ function launchDate(endsAt: string, locale: Locale): string {
  * passes at the launch price with the regular one crossed out and the end date, a single episode.
  * The prices shown are the ones that will be charged.
  */
-export function PaywallPanel({ locale, target, series, signedIn = true, onSignIn }: {
+export function PaywallPanel({ locale, target, series, signedIn = true, hasEmail = signedIn, onSignIn, signInHref }: {
   locale: Locale;
   target?: PaywallTarget;
   /** Choices for "one series for a day". */
   series: SeriesOption[];
-  /** Signed out: an email field; paying creates the account and emails its password. */
+  /** Signed out: QRIS / SBP create a guest account (cookie only); a card asks for an email first. */
   signedIn?: boolean;
+  /** The account has an email (guests from QRIS/SBP do not): cards need one. */
+  hasEmail?: boolean;
   /** The email already has an account: open sign-in. */
   onSignIn?: () => void;
+  /** Same, as a link (pages rendered on the server cannot pass onSignIn). */
+  signInHref?: string;
 }) {
   const t = getDictionary(locale);
   const [offer, setOffer] = useState<OfferState | null>(null);
@@ -64,18 +68,31 @@ export function PaywallPanel({ locale, target, series, signedIn = true, onSignIn
   const [error, setError] = useState<string>();
   const [email, setEmail] = useState("");
   const [emailTaken, setEmailTaken] = useState(false);
-  // Signed up here already (a retry after a failed payment start): no second sign-up.
+  // Has a session (signed in, or a guest made here on a retry): no second sign-up.
   const [joined, setJoined] = useState(signedIn);
+  const [withEmail, setWithEmail] = useState(hasEmail);
+  // A card (DOKU) needs the payer's email: its first press shows the email field instead.
+  const [cardStep, setCardStep] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const emailOk = /^\S+@\S+\.\S+$/.test(email.trim());
+  // Pressed "pay by card" with no valid email yet: the field turns red.
+  const [emailFlag, setEmailFlag] = useState(0);
+  // Bumped to bring the email field into view and focus it.
+  const [focusTick, setFocusTick] = useState(0);
 
   const load = useCallback(async () => {
     try {
-      const response = await fetch("/api/offer", { method: "POST" });
+      const response = await fetch("/api/offer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale }),
+      });
       if (!response.ok) throw new Error();
       setOffer(await response.json());
     } catch {
       setFailed(true);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     load();
@@ -84,6 +101,21 @@ export function PaywallPanel({ locale, target, series, signedIn = true, onSignIn
   useEffect(() => {
     trackEvent("paywall", target?.slug ?? "vip");
   }, [target?.slug]);
+
+  // Saw the plans: the ad campaigns optimise for this (AddToCart), once per paywall shown.
+  const sawPlans = useRef(false);
+  useEffect(() => {
+    if (!offer || sawPlans.current) return;
+    sawPlans.current = true;
+    const shown = offer.products.find((p) => p.id === plan) ?? offer.products[0];
+    trackPixel("AddToCart", {
+      value: shown?.price ?? 0,
+      currency: "IDR",
+      content_name: target?.slug ?? "vip",
+      content_type: "product",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offer]);
 
   async function signUp(): Promise<boolean> {
     const response = await fetch("/api/auth/quick", {
@@ -95,6 +127,7 @@ export function PaywallPanel({ locale, target, series, signedIn = true, onSignIn
     if (response.ok) {
       trackPixel("CompleteRegistration");
       setJoined(true);
+      setWithEmail(true);
       return true;
     }
     if (data.error === "email_taken") setEmailTaken(true);
@@ -102,26 +135,51 @@ export function PaywallPanel({ locale, target, series, signedIn = true, onSignIn
     return false;
   }
 
+  /** QRIS / SBP without an email: a guest account kept by the session cookie. */
+  async function joinAsGuest(): Promise<boolean> {
+    const response = await fetch("/api/auth/guest", { method: "POST" });
+    if (response.ok) {
+      setJoined(true);
+      return true;
+    }
+    setError(t.paywall.error);
+    return false;
+  }
+
+  // The email field was just shown, or pressed past empty: bring it into view, cursor in it.
+  useEffect(() => {
+    if (focusTick === 0) return;
+    const field = emailRef.current;
+    field?.scrollIntoView({ behavior: "smooth", block: "center" });
+    field?.focus({ preventScroll: true });
+  }, [focusTick]);
+
   async function pay(method: PayMethod) {
-    setPending(method);
     setError(undefined);
     setEmailTaken(false);
-    if (!joined) {
-      if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-        setError(t.auth.emailInvalid);
+    const needsEmail = method === "CREDIT_CARD" && !withEmail;
+    if (needsEmail && !cardStep) {
+      setCardStep(true);
+      setFocusTick((n) => n + 1);
+      return;
+    }
+    if (needsEmail && !emailOk) {
+      setError(t.auth.emailInvalid);
+      setEmailFlag((n) => n + 1);
+      setFocusTick((n) => n + 1);
+      return;
+    }
+    setPending(method);
+    try {
+      const ready = needsEmail ? await signUp() : joined || (await joinAsGuest());
+      if (!ready) {
         setPending(null);
         return;
       }
-      try {
-        if (!(await signUp())) {
-          setPending(null);
-          return;
-        }
-      } catch {
-        setError(t.auth.errors.network);
-        setPending(null);
-        return;
-      }
+    } catch {
+      setError(t.auth.errors.network);
+      setPending(null);
+      return;
     }
     const slug = plan === "series_day" ? seriesSlug : plan === "episode" ? target?.slug : undefined;
     try {
@@ -172,8 +230,15 @@ export function PaywallPanel({ locale, target, series, signedIn = true, onSignIn
   };
   const chosenKind = offer.products.find((p) => p.id === plan)?.kind;
   const launch = offer.launch.active && offer.launch.ends_at ? offer.launch : null;
-  // In the API's order (QRIS, cards, SBP); SBP is for Russian speakers only.
-  const methods = offer.methods.filter((m) => m !== "SBP" || locale === "ru");
+  // A card is the main way to pay everywhere: first and bright. The rest depends on the region:
+  // QRIS takes Indonesian bank apps only (foreigners from the ads kept pressing it and could not
+  // pay), SBP is for Russia and Russian speakers. Unknown country: QRIS stays.
+  const country = offer.country ?? "";
+  const regional = (m: PayMethod) =>
+    m === "QRIS" ? country === "" || country === "ID" : m === "SBP" ? country === "RU" || locale === "ru" : true;
+  const methods = offer.methods
+    .filter(regional)
+    .sort((x, y) => Number(y === "CREDIT_CARD") - Number(x === "CREDIT_CARD"));
 
   return (
     <div className="flex flex-col gap-4">
@@ -243,6 +308,9 @@ export function PaywallPanel({ locale, target, series, signedIn = true, onSignIn
                 </span>
                 <span className="flex shrink-0 flex-col items-end">
                   <span className="text-lg font-bold">{formatIdr(p.price)}</span>
+                  {offer.approx && (
+                    <span className="text-xs text-muted">{formatApprox(p.price, offer.approx, locale)}</span>
+                  )}
                   {launch && p.price < p.regular_price && (
                     <span className="text-xs text-muted line-through">{formatIdr(p.regular_price)}</span>
                   )}
@@ -268,6 +336,7 @@ export function PaywallPanel({ locale, target, series, signedIn = true, onSignIn
           );
         })}
       </div>
+      {offer.approx && <p className="-mt-2 text-xs text-muted">{t.paywall.approxNote}</p>}
       {chosenKind === "vip" && (
         <div className="-mt-1 flex flex-col gap-2">
           <p className="text-xs text-muted">{t.paywall.plansNote}</p>
@@ -288,19 +357,25 @@ export function PaywallPanel({ locale, target, series, signedIn = true, onSignIn
         </div>
       )}
 
-      {!joined && (
+      {cardStep && !withEmail && (
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium">{t.paywall.email}</span>
           <input
+            ref={emailRef}
             type="email"
             inputMode="email"
             autoComplete="email"
             required
+            aria-invalid={emailFlag > 0 && !emailOk}
             value={email}
             onChange={(event) => { setEmail(event.target.value); setEmailTaken(false); setError(undefined); }}
             placeholder="you@example.com"
             disabled={pending !== null}
-            className="rounded-xl border border-border bg-surface-secondary px-3 py-2.5 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            className={`rounded-xl border bg-surface-secondary px-3 py-2.5 text-foreground outline-none focus-visible:ring-2 ${
+              emailFlag > 0 && !emailOk
+                ? "border-danger ring-2 ring-danger focus-visible:ring-danger"
+                : "border-border focus-visible:ring-focus"
+            }`}
           />
           <span className="text-xs text-muted">{t.paywall.emailNote}</span>
         </label>
@@ -308,19 +383,24 @@ export function PaywallPanel({ locale, target, series, signedIn = true, onSignIn
       {methods.length === 0 ? (
         <p className="text-sm text-danger">{t.paywall.unavailable}</p>
       ) : (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          {methods.map((method) => (
-            <Button
-              key={method}
-              variant={method === methods[0] ? "primary" : "secondary"}
-              fullWidth
-              isPending={pending === method}
-              isDisabled={pending !== null && pending !== method}
-              onPress={() => pay(method)}
-            >
-              {pending === method ? t.paywall.opening : PAY_LABEL[method](t)}
-            </Button>
-          ))}
+        <div className="flex flex-col gap-2">
+          {methods.map((method) => {
+            const main = method === "CREDIT_CARD" || methods.length === 1;
+            return (
+              <Button
+                key={method}
+                variant={main ? "primary" : "secondary"}
+                size={main ? "lg" : "md"}
+                fullWidth
+                className={main ? "bg-gradient-to-r from-accent to-tag text-base font-bold text-accent-foreground shadow-lg" : undefined}
+                isPending={pending === method}
+                isDisabled={pending !== null && pending !== method}
+                onPress={() => pay(method)}
+              >
+                {pending === method ? t.paywall.opening : PAY_LABEL[method](t)}
+              </Button>
+            );
+          })}
         </div>
       )}
       {error && (
@@ -330,6 +410,11 @@ export function PaywallPanel({ locale, target, series, signedIn = true, onSignIn
             <button type="button" onClick={onSignIn} className="cursor-pointer font-semibold underline underline-offset-2">
               {t.paywall.signIn}
             </button>
+          )}
+          {emailTaken && !onSignIn && signInHref && (
+            <Link href={signInHref} className="font-semibold underline underline-offset-2">
+              {t.paywall.signIn}
+            </Link>
           )}
         </p>
       )}

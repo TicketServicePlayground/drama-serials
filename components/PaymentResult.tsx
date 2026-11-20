@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { BrowserTransfer } from "./BrowserTransfer";
 import { Spinner } from "@heroui/react";
 import type { PaymentState } from "@/lib/billing-types";
 import { getDictionary, withLocale, type Locale } from "@/lib/i18n";
@@ -34,7 +35,7 @@ export function PaymentResult({ id, locale }: { id: string; locale: Locale }) {
           const data: PaymentState = await response.json();
           if (stopped) return;
           setState(data);
-          if (data.status === "paid") trackPurchaseOnce(id, data.amount, data.currency || "IDR", data.product);
+          if (data.status === "paid") trackPurchaseOnce(id, data.amount, data.currency || "IDR", data.product, data.slug);
           if (data.status !== "pending") return;
         }
       } catch {
@@ -99,6 +100,7 @@ export function PaymentResult({ id, locale }: { id: string; locale: Locale }) {
         >
           {t.payment.startWatching}
         </Link>
+        <BrowserTransfer locale={locale} next={nextHref} className="mt-6 w-full" />
       </div>
     );
   }

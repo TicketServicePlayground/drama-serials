@@ -52,9 +52,10 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    # Stored lower-cased, so the unique index is case-insensitive in practice.
-    email: Mapped[str] = mapped_column(String(254), unique=True)
-    password_hash: Mapped[str] = mapped_column(String(200))
+    # Stored lower-cased, so the unique index is case-insensitive in practice. None for a guest
+    # (paid by QRIS/SBP without an email): such an account lives only in the session cookie.
+    email: Mapped[str | None] = mapped_column(String(254), unique=True)
+    password_hash: Mapped[str | None] = mapped_column(String(200))
     # End of this user's one-time offer; set the first time they see the paywall, never reset.
     offer_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Which version of the Terms and Privacy Policy the user accepted at sign-up, and when.
@@ -217,6 +218,9 @@ class Visit(Base):
     fbclid: Mapped[bool] = mapped_column(server_default=text("false"), default=False)
     # ISO country code of the visitor's IP, as the proxy in front reports it; no IP is kept.
     country: Mapped[str] = mapped_column(String(2), server_default="", default="")
+    # Random id from the browser's own storage: the same browser on another day ("" = none,
+    # e.g. visits from before it was added). Used to count return visits.
+    client_id: Mapped[str] = mapped_column(String(32), server_default="", default="", index=True)
     user_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )

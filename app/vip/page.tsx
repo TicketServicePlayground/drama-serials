@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { BackIcon } from "@/components/icons";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
@@ -16,8 +15,8 @@ import { getLocale } from "@/lib/locale";
 export const metadata: Metadata = { title: "VIP" };
 
 export default async function VipPage() {
+  // Guests buy here too: QRIS/SBP need nothing, a card asks for an email at payment.
   const [locale, account] = await Promise.all([getLocale(), getAccount()]);
-  if (!account) redirect(withLocale("/?auth=vip", locale));
   const t = getDictionary(locale);
   return (
     <div className="mx-auto w-full max-w-xl flex-1 px-3 pb-10 sm:px-6">
@@ -32,7 +31,7 @@ export default async function VipPage() {
         <LanguageSwitcher locale={locale} />
       </header>
       <h1 className="mt-4 text-2xl font-bold">{t.paywall.title}</h1>
-      {account.has_access && account.access_until && (
+      {account?.has_access && account.access_until && (
         <p className="mt-3 flex items-center gap-2 rounded-xl bg-gold-soft px-3 py-2 text-sm text-gold">
           <CrownIcon className="size-4" />
           {t.paywall.activeUntil} <LocalDate iso={account.access_until} locale={locale} />
@@ -44,6 +43,9 @@ export default async function VipPage() {
           series={getCatalog(locale)
             .filter((s) => !s.vip)
             .map((s) => ({ slug: s.slug, title: s.title }))}
+          signedIn={account !== null}
+          hasEmail={Boolean(account?.email)}
+          signInHref={withLocale("/?auth=vip", locale)}
         />
       </div>
       <LegalFooter locale={locale} className="mt-10" />

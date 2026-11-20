@@ -98,7 +98,9 @@ class DokuProvider:
             base_url=settings.doku_api_url, timeout=settings.provider_timeout_seconds
         )
 
-    async def open(self, payment: Payment, *, payer_email: str, return_url: str) -> Checkout:
+    async def open(self, payment: Payment, *, payer_email: str | None, return_url: str) -> Checkout:
+        if not payer_email:  # the API refuses guests before this; DOKU needs the customer email
+            raise ProviderError("doku needs the payer email")
         body = json.dumps(
             {
                 "order": {

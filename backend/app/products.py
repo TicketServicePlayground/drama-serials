@@ -50,6 +50,23 @@ def launch_active(now: datetime | None = None) -> bool:
     return ends is not None and (now or datetime.now(UTC)) < ends
 
 
-def price_for(product: Product, now: datetime | None = None) -> int:
-    """The price charged now: the launch price until the launch ends, the regular one after."""
-    return product.price if launch_active(now) else product.regular_price
+def country_factor(country: str | None) -> float:
+    """settings.country_price_factors for this ISO country code; 1 elsewhere."""
+    for item in settings.country_price_factors.split(","):
+        code, _, factor = item.partition("=")
+        if country and code.strip().upper() == country.upper():
+            try:
+                return float(factor)
+            except ValueError:
+                return 1
+    return 1
+
+
+def in_country(amount: int, country: str | None) -> int:
+    return round(amount * country_factor(country))
+
+
+def price_for(product: Product, now: datetime | None = None, country: str | None = None) -> int:
+    """The price charged now: the launch price until the launch ends, the regular one after;
+    times the visitor country's factor."""
+    return in_country(product.price if launch_active(now) else product.regular_price, country)

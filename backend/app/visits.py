@@ -62,12 +62,14 @@ def referrer_host(referrer: str) -> str:
 
 
 COUNTRY_RE = re.compile(r"^[A-Z]{2}$")
-# Visits of test accounts' visitor-days are left out (the same person before signing in too).
-LIVE_VISITS = f"""(SELECT * FROM visits lv WHERE NOT EXISTS (
-    SELECT 1 FROM visits t JOIN users u ON u.id = t.user_id
-    WHERE u.is_test AND t.visitor = lv.visitor
-      AND (t.at AT TIME ZONE '{TZ_NAME}')::date = (lv.at AT TIME ZONE '{TZ_NAME}')::date)) AS visits"""
-LIVE_USER = " AND user_id NOT IN (SELECT id FROM users WHERE is_test)"
+CLIENT_ID_RE = re.compile(r"^[a-f0-9]{16,32}$")
+# A "заход" (session): page views of one person with no break longer than this. A return
+# visit is a session of someone seen before, the same day or earlier. A person is the
+# browser's id (visits.client_id) or, without one, the daily visitor hash.
+SESSION_GAP = "interval '30 minutes'"
+PERSON = "coalesce(nullif(client_id, ''), visitor)"
+# The stats are raw: every visit, sign-up and payment counts, whoever made it. Nothing here
+# looks at users.is_test (that flag only keeps team purchases out of Meta, app/billing.py).
 
 
 # Clicks on the way to paying, besides page views (event ""):
@@ -75,7 +77,8 @@ LIVE_USER = " AND user_id NOT IN (SELECT id FROM users WHERE is_test)"
 #   auth_open - the sign-up / sign-in dialog was shown (target = why: watch, like, vip, generic)
 #   episode   - an episode on a series page (target = "slug/number")
 #   paywall   - the plans were shown (target = slug, or "vip" for the VIP page)
-EVENTS = {"", "cover", "auth_open", "episode", "paywall"}
+#   email_gate - "more episodes free for an email" was shown (target = "slug/number")
+EVENTS = {"", "cover", "auth_open", "episode", "email_gate", "paywall"}
 
 
 class PageView(BaseModel):
@@ -91,6 +94,8 @@ class PageView(BaseModel):
     lang: str = ""
     event: str = ""
     target: str = ""
+    # Random id from the browser's storage (lib/track.ts): the same browser on other days.
+    cid: str = ""
     # Filled in by the site's server from the request, never by the browser.
     ip: str = ""
     ua: str = ""
@@ -117,6 +122,7 @@ async def track(body: PageView, user: CurrentUser, session: Session):
         device=device_of(body.ua),
         event=body.event,
         target=body.target.strip()[:80],
+        client_id=body.cid if CLIENT_ID_RE.match(body.cid) else "",
         user_id=user.id if user else None,
     )
     session.add(visit)
@@ -127,6 +133,28 @@ async def track(body: PageView, user: CurrentUser, session: Session):
             await _remember_first_source(session, user, visit)
     await session.commit()
     return None
+
+
+async def link_payer(session, user, ip: str, ua: str) -> None:
+    """Ties the visitor-day a user starts paying from to them. Someone who signs up at paying
+    (a guest by QRIS/SBP, an email at the paywall) and goes straight to the payment page sends
+    no signed-in page view, so without this their sign-up and payment have no source or country.
+    Marks the visitor's latest page view of the last day as theirs and takes its first source."""
+    if not ip or not ua:
+        return
+    now = datetime.now(UTC)
+    visitor = visitor_id(ip, ua, now)
+    since = now - timedelta(hours=24)
+    await session.execute(
+        text(
+            "UPDATE visits SET user_id = :user WHERE id = (SELECT id FROM visits WHERE visitor = :visitor "
+            "AND at > :since AND user_id IS NULL AND NOT EXISTS (SELECT 1 FROM visits w "
+            "WHERE w.visitor = :visitor AND w.at > :since AND w.user_id = :user) ORDER BY at DESC LIMIT 1)"
+        ),
+        {"user": user.id, "visitor": visitor, "since": since},
+    )
+    if user.src_at is None:
+        await _remember_first_source(session, user, Visit(visitor=visitor, at=now))
 
 
 async def _remember_first_source(session, user, visit: Visit) -> None:
@@ -157,14 +185,14 @@ def _rows(result) -> list[dict]:
 
 
 @router.get("/stats")
-async def stats(session: Session, key: Annotated[str, Query()] = "", tests: bool = False):
+async def stats(session: Session, key: Annotated[str, Query()] = ""):
     if not settings.stats_key or not hmac.compare_digest(key, settings.stats_key):
         return JSONResponse({"error": "not_found"}, status_code=404)
 
     tz = {"tz": TZ_NAME}
     day = "(at AT TIME ZONE :tz)::date"
-    V = "visits" if tests else LIVE_VISITS
-    U = "" if tests else LIVE_USER
+    V = "visits"
+    U = ""
     today = datetime.now(TZ).date()
 
     async def totals(since_days: int, until_days: int = -1) -> dict:
@@ -183,7 +211,7 @@ async def stats(session: Session, key: Annotated[str, Query()] = "", tests: bool
         signups = (
             await session.execute(
                 text(
-                    "SELECT count(*) FROM users WHERE " + ("" if tests else "NOT is_test AND ") + "(created_at AT TIME ZONE :tz)::date >= :start "
+                    "SELECT count(*) FROM users WHERE (created_at AT TIME ZONE :tz)::date >= :start "
                     "AND (created_at AT TIME ZONE :tz)::date < :end"
                 ),
                 params,
@@ -206,7 +234,34 @@ async def stats(session: Session, key: Annotated[str, Query()] = "", tests: bool
             "signups": signups,
             "paid": paid.paid,
             "revenue": int(paid.revenue),
+            **sessions_in(params["start"], params["end"]),
         }
+
+    # Sessions and return sessions per day (see SESSION_GAP), for the last 30 days.
+    session_days = {
+        row.d: (row.sessions, row.returns)
+        for row in (
+            await session.execute(
+                text(
+                    f"""
+                    WITH s AS (
+                      SELECT at, lag(at) OVER (PARTITION BY {PERSON} ORDER BY at) AS prev
+                      FROM {V} WHERE event = ''
+                    )
+                    SELECT (at AT TIME ZONE :tz)::date AS d,
+                      count(*) FILTER (WHERE prev IS NULL OR at - prev > {SESSION_GAP}) AS sessions,
+                      count(*) FILTER (WHERE prev IS NOT NULL AND at - prev > {SESSION_GAP}) AS returns
+                    FROM s WHERE (at AT TIME ZONE :tz)::date >= :start GROUP BY 1
+                    """
+                ),
+                {**tz, "start": today - timedelta(days=29)},
+            )
+        ).all()
+    }
+
+    def sessions_in(start, end) -> dict:
+        days = [v for d, v in session_days.items() if start <= d < end]
+        return {"sessions": sum(v[0] for v in days), "returns": sum(v[1] for v in days)}
 
     week = {**tz, "start": today - timedelta(days=6)}
 
@@ -232,7 +287,7 @@ async def stats(session: Session, key: Annotated[str, Query()] = "", tests: bool
                 SELECT days.d AS day,
                   (SELECT count(DISTINCT visitor) FROM {V} WHERE event = '' AND {day} = days.d) AS visitors,
                   (SELECT count(*) FROM {V} WHERE event = '' AND {day} = days.d) AS views,
-                  (SELECT count(*) FROM users WHERE {"" if tests else "NOT is_test AND "}(created_at AT TIME ZONE :tz)::date = days.d) AS signups,
+                  (SELECT count(*) FROM users WHERE (created_at AT TIME ZONE :tz)::date = days.d) AS signups,
                   (SELECT count(*) FROM payments WHERE status = 'paid'{U}
                      AND (paid_at AT TIME ZONE :tz)::date = days.d) AS paid
                 FROM days ORDER BY days.d DESC
@@ -244,14 +299,18 @@ async def stats(session: Session, key: Annotated[str, Query()] = "", tests: bool
     recent = _rows(
         await session.execute(
             text(
+                "SELECT at, visitor, path, referrer, utm_source, lang, device, country, signed_in, "
+                f"(prev IS NOT NULL AND at - prev > {SESSION_GAP}) AS returned FROM ("
                 "SELECT at, visitor, path, referrer, utm_source, lang, device, country, "
-                f"(user_id IS NOT NULL) AS signed_in FROM {V} WHERE event = '' ORDER BY at DESC LIMIT 50"
+                f"(user_id IS NOT NULL) AS signed_in, lag(at) OVER (PARTITION BY {PERSON} ORDER BY at) AS prev "
+                f"FROM {V} WHERE event = '') r ORDER BY at DESC LIMIT 50"
             )
         )
     )
     for row in recent:
         row["at"] = row["at"].isoformat()
     for row in by_day:
+        row["sessions"], row["returns"] = session_days.get(row["day"], (0, 0))
         row["day"] = row["day"].isoformat()
 
     return {
@@ -273,7 +332,7 @@ async def stats(session: Session, key: Annotated[str, Query()] = "", tests: bool
 # --- funnel ------------------------------------------------------------------------------------
 
 # Steps in order; each counts visitor-days (one person on one day) that reached it.
-FUNNEL_STEPS = ["visit", "cover", "auth_open", "signup", "series", "episode", "paywall", "checkout", "paid"]
+FUNNEL_STEPS = ["visit", "cover", "auth_open", "signup", "series", "episode", "email_gate", "paywall", "checkout", "paid"]
 PERIODS = {"today": (0, -1), "yesterday": (1, 0), "7d": (6, -1), "30d": (29, -1)}
 
 
@@ -283,7 +342,6 @@ async def funnel(
     key: Annotated[str, Query()] = "",
     period: Annotated[str, Query()] = "7d",
     country: Annotated[str, Query()] = "",
-    tests: bool = False,
 ):
     """The way from the first page to a payment, per visitor-day, for paid traffic.
 
@@ -295,7 +353,7 @@ async def funnel(
 
     Payments a day or more after the visit are counted again by the user's first source
     (users.src_*), in `paid_by_source` / `revenue_by_source` of the campaign and country tables.
-    Test accounts (TEST_EMAILS) and their visitor-days are left out unless `tests`.
+    Nothing is left out: test and team accounts count like everyone else.
     `country` (ISO code) narrows everything to visitors from there.
     """
     if not settings.stats_key or not hmac.compare_digest(key, settings.stats_key):
@@ -309,14 +367,24 @@ async def funnel(
         "end": today - timedelta(days=until),
         "country": country,
     }
-    V = "visits" if tests else LIVE_VISITS
-    U = "" if tests else LIVE_USER
+    V = "visits"
+    U = ""
     paid_day = "(p.created_at AT TIME ZONE :tz)::date = vd.d"
+    # A user's sign-up and payments count for one visitor-day only: the first one they were
+    # signed in on that day. Someone whose IP changes (mobile network, VPN) is several
+    # visitor-days, and the same payment would otherwise count on each of them.
+    own = "JOIN owner o ON o.user_id = {col} AND o.d = vd.d AND o.visitor = vd.visitor"
 
     per_visitor = f"""
         WITH v AS (
           SELECT (at AT TIME ZONE :tz)::date AS d, * FROM {V}
           WHERE (at AT TIME ZONE :tz)::date >= :start AND (at AT TIME ZONE :tz)::date < :end
+        ), owner AS (
+          SELECT DISTINCT ON (user_id, (at AT TIME ZONE :tz)::date) user_id,
+            (at AT TIME ZONE :tz)::date AS d, visitor FROM visits
+          WHERE user_id IS NOT NULL
+            AND (at AT TIME ZONE :tz)::date >= :start AND (at AT TIME ZONE :tz)::date < :end
+          ORDER BY user_id, (at AT TIME ZONE :tz)::date, at
         ), vd AS (
           SELECT d, visitor,
             coalesce((array_agg(utm_source ORDER BY at) FILTER (WHERE utm_source <> ''))[1],
@@ -329,24 +397,25 @@ async def funnel(
             bool_or(event = 'auth_open') AS auth_open,
             bool_or(event = '' AND path LIKE '/series/%') AS series,
             bool_or(event = 'episode') AS episode,
+            bool_or(event = 'email_gate') AS email_gate,
             bool_or(event = 'paywall') AS paywall,
             array_agg(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL) AS users
           FROM v GROUP BY d, visitor
         ), steps AS (
           SELECT vd.*,
-            EXISTS (SELECT 1 FROM users u WHERE u.id = ANY(vd.users)
-                    AND (u.created_at AT TIME ZONE :tz)::date = vd.d) AS signup,
-            EXISTS (SELECT 1 FROM payments p WHERE p.user_id = ANY(vd.users) AND {paid_day}) AS checkout,
-            EXISTS (SELECT 1 FROM payments p WHERE p.user_id = ANY(vd.users) AND p.status = 'paid'
+            EXISTS (SELECT 1 FROM users u {own.format(col="u.id")}
+                    WHERE (u.created_at AT TIME ZONE :tz)::date = vd.d) AS signup,
+            EXISTS (SELECT 1 FROM payments p {own.format(col="p.user_id")} WHERE {paid_day}) AS checkout,
+            EXISTS (SELECT 1 FROM payments p {own.format(col="p.user_id")} WHERE p.status = 'paid'
                     AND {paid_day}) AS paid,
-            coalesce((SELECT sum(p.amount) FROM payments p WHERE p.user_id = ANY(vd.users)
-                      AND p.status = 'paid' AND {paid_day}), 0) AS revenue
+            coalesce((SELECT sum(p.amount) FROM payments p {own.format(col="p.user_id")}
+                      WHERE p.status = 'paid' AND {paid_day}), 0) AS revenue
           FROM vd
           WHERE (:country = '' OR vd.country = :country)
         )
     """
     counts = ", ".join(f"count(*) FILTER (WHERE {s}) AS {s}" for s in FUNNEL_STEPS if s != "visit")
-    reached = "count(*) FILTER (WHERE visit OR cover OR episode OR paywall) AS visit"
+    reached = "count(*) FILTER (WHERE visit OR cover OR episode OR email_gate OR paywall) AS visit"
 
     async def grouped(columns: str, order: str) -> list[dict]:
         rows = _rows(
@@ -376,7 +445,7 @@ async def funnel(
                 SELECT coalesce(u.src_campaign, '') AS campaign, coalesce(u.src_content, '') AS content,
                        coalesce(u.src_country, '') AS country, count(*) AS paid, sum(p.amount) AS revenue
                 FROM payments p JOIN users u ON u.id = p.user_id
-                WHERE p.status = 'paid' {"" if tests else "AND NOT u.is_test"}
+                WHERE p.status = 'paid'
                   AND (p.paid_at AT TIME ZONE :tz)::date >= :start AND (p.paid_at AT TIME ZONE :tz)::date < :end
                   AND (:country = '' OR u.src_country = :country)
                 GROUP BY 1, 2, 3
@@ -430,7 +499,7 @@ async def funnel(
             text(
                 f"""
                 SELECT
-                  (SELECT count(*) FROM users WHERE {"" if tests else "NOT is_test AND "}(created_at AT TIME ZONE :tz)::date >= :start
+                  (SELECT count(*) FROM users WHERE (created_at AT TIME ZONE :tz)::date >= :start
                      AND (created_at AT TIME ZONE :tz)::date < :end) AS signups,
                   (SELECT count(*) FROM payments WHERE (created_at AT TIME ZONE :tz)::date >= :start{U}
                      AND (created_at AT TIME ZONE :tz)::date < :end) AS checkouts,
@@ -458,7 +527,6 @@ async def funnel(
         "period": period if period in PERIODS else "7d",
         "country": country,
         "countries": countries,
-        "tests": tests,
         "steps": FUNNEL_STEPS,
         "total": total,
         "by_source": by_source,
@@ -472,11 +540,11 @@ async def funnel(
 @router.get("/series-views")
 async def series_views(session: Session) -> dict:
     """Real plays for the showcase (instead of made-up counters): episode opens per series and
-    per episode, all time, without test accounts."""
+    per episode, all time."""
     rows = (
         await session.execute(
             text(
-                f"SELECT target, count(*) AS n FROM {LIVE_VISITS} WHERE event = 'episode' AND target LIKE '%/%' GROUP BY target"
+                f"SELECT target, count(*) AS n FROM visits WHERE event = 'episode' AND target LIKE '%/%' GROUP BY target"
             )
         )
     ).all()

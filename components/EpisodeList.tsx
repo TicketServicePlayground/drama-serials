@@ -16,13 +16,11 @@ function PlayGlyph({ className = "" }: { className?: string }) {
   );
 }
 
-function EpisodeCard({ episode, locale, liked, locked, free, priority, onLike, onPlay }: {
+function EpisodeCard({ episode, locale, liked, locked, priority, onLike, onPlay }: {
   episode: Episode;
   locale: Locale;
   liked: boolean;
   locked: boolean;
-  /** Free for everyone (shown as a badge instead of the lock). */
-  free: boolean;
   priority: boolean;
   onLike: () => void;
   onPlay: () => void;
@@ -54,11 +52,6 @@ function EpisodeCard({ episode, locale, liked, locked, free, priority, onLike, o
         {locked && (
           <span className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur">
             <LockIcon className="size-4" />
-          </span>
-        )}
-        {free && (
-          <span className="absolute top-2 right-2 rounded-md bg-success px-2 py-0.5 text-xs font-semibold text-white">
-            {t.series.free}
           </span>
         )}
         <span
@@ -96,12 +89,11 @@ function EpisodeCard({ episode, locale, liked, locked, free, priority, onLike, o
   );
 }
 
-export function EpisodeList({ episodes, locale, likes, isLocked, isFree, onLike, onPlay }: {
+export function EpisodeList({ episodes, locale, likes, isLocked, onLike, onPlay }: {
   episodes: Episode[];
   locale: Locale;
   likes: Set<string>;
   isLocked: (episode: Episode) => boolean;
-  isFree?: (episode: Episode) => boolean;
   onLike: (id: string) => void;
   onPlay: (episode: Episode) => void;
 }) {
@@ -114,7 +106,6 @@ export function EpisodeList({ episodes, locale, likes, isLocked, isFree, onLike,
           locale={locale}
           liked={likes.has(episode.id)}
           locked={isLocked(episode)}
-          free={isFree?.(episode) ?? false}
           priority={episode.number === 1}
           onLike={() => onLike(episode.id)}
           onPlay={() => onPlay(episode)}

@@ -64,12 +64,13 @@ class XenditProvider:
     def reference(self, payment: Payment) -> str:
         return f"{REF_PREFIX}{payment.id}"
 
-    async def open(self, payment: Payment, *, payer_email: str, return_url: str) -> Checkout:
+    async def open(self, payment: Payment, *, payer_email: str | None, return_url: str) -> Checkout:
         body = {
             "external_id": payment.provider_ref,
             "amount": payment.amount,
             "currency": payment.currency,
-            "payer_email": payer_email,
+            # Guests (QRIS without an email) get no receipt email from Xendit.
+            **({"payer_email": payer_email} if payer_email else {}),
             "description": products()[payment.product].title,
             "invoice_duration": settings.checkout_minutes * 60,
             "success_redirect_url": return_url,

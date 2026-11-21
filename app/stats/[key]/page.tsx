@@ -8,21 +8,22 @@ import { findSerial } from "@/lib/catalog";
 export const metadata: Metadata = { title: "Статистика", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-interface Totals { browsers: number; views: number; views_no_id: number; signed_in_views: number; signups: number; paid: number; revenue: number; sessions: number; returns: number }
-interface Top { name: string; views: number; browsers: number }
+interface Totals { views: number; signed_in_views: number; signups: number; paid: number; revenue: number }
+interface Top { name: string; views: number }
 interface Stats {
   timezone: string;
   today: Totals;
   yesterday: Totals;
   week: Totals;
   month: Totals;
-  by_day: { day: string; browsers: number; views: number; views_no_id: number; signups: number; paid: number; sessions: number; returns: number }[];
+  by_day: { day: string; views: number; signups: number; paid: number; revenue: number }[];
   pages: Top[];
   referrers: Top[];
   utm: Top[];
+  campaigns: Top[];
   langs: Top[];
   devices: Top[];
-  recent: { at: string; client_id: string; path: string; referrer: string; utm_source: string; lang: string; device: string; country: string; signed_in: boolean }[];
+  recent: { at: string; client_id: string; path: string; referrer: string; utm_source: string; utm_campaign: string; lang: string; device: string; country: string; signed_in: boolean }[];
 }
 
 const DEVICE: Record<string, string> = { mobile: "телефон", tablet: "планшет", desktop: "компьютер" };
@@ -38,7 +39,6 @@ export default async function StatsPage({ params }: {
   params: Promise<{ key: string }>;
 }) {
   const { key } = await params;
-  // Everything as it is: test accounts and the team's visits are counted like anyone's.
   const { status, data } = await apiFetch<Stats>(`/stats?key=${encodeURIComponent(key)}`);
   if (status !== 200) notFound();
 
@@ -57,6 +57,7 @@ export default async function StatsPage({ params }: {
     ["Страницы · 7 дней", data.pages, pageName],
     ["Откуда пришли · 7 дней", data.referrers, (n) => n],
     ["utm_source · 7 дней", data.utm, (n) => n],
+    ["utm_campaign · 7 дней", data.campaigns, (n) => n],
     ["Язык · 7 дней", data.langs, (n) => n.toUpperCase()],
     ["Устройство · 7 дней", data.devices, (n) => DEVICE[n] ?? n],
   ];
@@ -78,8 +79,7 @@ export default async function StatsPage({ params }: {
             <p className="text-xs text-muted">{label}</p>
             <p className="mt-1 text-2xl font-bold tabular-nums">{t.views}</p>
             <p className="text-xs text-muted">визитов (просмотров страниц)</p>
-            <p className="text-xs text-muted tabular-nums">браузеров {t.browsers} · в аккаунте {t.signed_in_views}</p>
-            <p className="mt-1 text-xs tabular-nums">заходов {t.sessions} · повторных {t.returns}</p>
+            <p className="text-xs text-muted tabular-nums">из них в аккаунте {t.signed_in_views}</p>
             <p className="mt-2 text-xs tabular-nums">
               рег. {t.signups} · опл. {t.paid}
               {t.revenue > 0 && <span className="text-muted"> · {formatIdr(t.revenue)}</span>}
@@ -95,11 +95,9 @@ export default async function StatsPage({ params }: {
             <tr className="text-right">
               <th className="py-1 text-left font-normal">день</th>
               <th className="font-normal">визиты</th>
-              <th className="font-normal">браузеры</th>
-              <th className="font-normal">заходы</th>
-              <th className="font-normal">повт.</th>
               <th className="font-normal">рег.</th>
               <th className="font-normal">опл.</th>
+              <th className="font-normal">выручка</th>
             </tr>
           </thead>
           <tbody>
@@ -107,11 +105,9 @@ export default async function StatsPage({ params }: {
               <tr key={d.day} className={`border-t border-border text-right ${d.views === 0 ? "text-muted" : ""}`}>
                 <td className="py-1.5 text-left">{dayFmt.format(new Date(d.day))}</td>
                 <td>{d.views}</td>
-                <td>{d.browsers}</td>
-                <td>{d.sessions}</td>
-                <td>{d.returns}</td>
                 <td>{d.signups}</td>
                 <td>{d.paid}</td>
+                <td>{d.revenue ? formatIdr(d.revenue) : "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -130,7 +126,7 @@ export default async function StatsPage({ params }: {
                   <li key={r.name} className="flex justify-between gap-3 border-t border-border py-1.5">
                     <span className="truncate">{name(r.name)}</span>
                     <span className="shrink-0 tabular-nums text-muted">
-                      {r.browsers} · {r.views}
+                      {r.views}
                     </span>
                   </li>
                 ))}
@@ -142,7 +138,7 @@ export default async function StatsPage({ params }: {
 
       <section className="mt-6">
         <h2 className="mb-1 text-sm font-semibold">Последние просмотры</h2>
-        <p className="mb-2 text-xs text-muted">метка = id браузера · ● вошёл в аккаунт</p>
+        <p className="mb-2 text-xs text-muted">метка = id браузера (client_id) · ● вошёл в аккаунт</p>
         {data.recent.length === 0 ? (
           <p className="text-xs text-muted">пока пусто</p>
         ) : (
@@ -162,6 +158,7 @@ export default async function StatsPage({ params }: {
                   {v.lang && ` · ${v.lang.toUpperCase()}`}
                   {v.referrer && ` · из ${v.referrer}`}
                   {v.utm_source && ` · utm ${v.utm_source}`}
+                  {v.utm_campaign && ` · ${v.utm_campaign}`}
                 </p>
               </li>
             ))}
@@ -170,12 +167,10 @@ export default async function StatsPage({ params }: {
       </section>
 
       <p className="mt-8 text-xs text-muted">
-        Как считается, без догадок: просмотры — строки визитов без события (event = &quot;&quot;); браузеры — разные id
-        браузера (client_id) среди них; строки без id (хранилище браузера закрыто) — только в «без id», людьми не
-        считаются. Регистрации — строки users по created_at, оплаты — строки payments со status = paid по paid_at.
-        Заход — просмотр браузера после 30 минут и больше без просмотров; повторный — любой заход, кроме первого.
-        Склейки людей по IP или модели телефона нет. Дни и время — по Бали (WITA). Боты по User-Agent не
-        записываются. Числа справа в списках: браузеры · просмотры.
+        Все числа — просто количество строк, никого не склеиваем и не угадываем. Визит — одна строка visits без события
+        (открытие страницы), «в аккаунте» — из них те, где человек был залогинен. Регистрации — строки users по
+        created_at, оплаты — строки payments со status = paid по paid_at. Дни и время — по Бали (WITA). Боты по
+        User-Agent не записываются. Числа справа в списках — визиты.
       </p>
     </main>
   );

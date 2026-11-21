@@ -10,21 +10,19 @@ export const metadata: Metadata = { title: "Воронка", robots: { index: fa
 export const dynamic = "force-dynamic";
 
 type Step = "visit" | "cover" | "auth_open" | "signup" | "series" | "episode" | "email_gate" | "paywall" | "checkout" | "paid";
-type VisitStep = "visit" | "cover" | "auth_open" | "series" | "episode" | "email_gate" | "paywall";
-type Counts = Record<Step, number> & Record<`${VisitStep}_rows`, number> & { visit_no_id: number; emails: number; revenue: number };
+type Counts = Record<Step, number> & { emails: number; revenue: number };
 interface Funnel {
   timezone: string;
   period: string;
   country: string;
   countries: string[];
   steps: Step[];
-  visit_steps: VisitStep[];
-  total: Partial<Counts>;
+  total: Counts;
   by_source: (Counts & { source: string })[];
   by_country: (Counts & { country: string })[];
   by_campaign: (Counts & { campaign: string; content: string })[];
   by_ab: (Counts & { ab: string })[];
-  by_series: { slug: string; cover: number; cover_rows: number; series: number; series_rows: number; episode: number; episode_rows: number; paywall: number; paywall_rows: number }[];
+  by_series: { slug: string; cover: number; series: number; episode: number; paywall: number; paid: number; revenue: number }[];
 }
 
 // [name, short name, how it is counted]
@@ -40,10 +38,6 @@ const STEP: Record<Step, [string, string, string]> = {
   checkout: ["Начатые оплаты", "оплата", "каждый созданный платёж"],
   paid: ["Оплаты", "оплатили", "каждый оплаченный платёж"],
 };
-const VISIT_STEPS = new Set<Step>(["visit", "cover", "auth_open", "series", "episode", "email_gate", "paywall"]);
-/** How many times: rows of visits for the site's steps, rows of users / payments for the rest. */
-const count = (row: Partial<Counts>, step: Step) => (VISIT_STEPS.has(step) ? row[`${step as VisitStep}_rows`] : row[step]) ?? 0;
-
 const PERIODS: [string, string][] = [
   ["today", "Сегодня"],
   ["yesterday", "Вчера"],
@@ -118,34 +112,29 @@ export default async function FunnelPage({ params, searchParams }: {
       <section>
         <div className="mb-1 flex justify-end gap-3 text-xs text-muted">
           <span className="w-16 text-right">сколько</span>
-          <span className="w-20 text-right">браузеров</span>
         </div>
         <ol className="flex flex-col gap-1.5">
           {data.steps.map((step, i) => {
-            const browsers = data.visit_steps.includes(step as VisitStep) ? data.total[step] : undefined;
             return (
               <li key={step} className="rounded-lg border border-border bg-surface px-3 py-2">
                 <div className="flex items-center gap-3 text-sm tabular-nums">
                   <span className="flex-1 truncate">
                     <span className="text-muted">{i + 1}.</span> {STEP[step][0]}
                   </span>
-                  <span className="w-16 text-right text-base font-bold">{count(data.total, step)}</span>
-                  <span className="w-20 text-right text-xs text-muted">{browsers ?? ""}</span>
+                  <span className="w-16 text-right text-base font-bold">{data.total[step]}</span>
                 </div>
                 <p className="text-xs text-muted">{STEP[step][2]}</p>
               </li>
             );
           })}
         </ol>
-        <p className="mt-2 text-xs text-muted tabular-nums">
-          Выручка за период: {formatIdr(data.total.revenue ?? 0)} · просмотров без id браузера: {data.total.visit_no_id ?? 0}
-        </p>
+        <p className="mt-2 text-xs text-muted tabular-nums">Выручка за период: {formatIdr(data.total.revenue)}</p>
         <p className="mt-2 text-xs text-muted">
-          Все числа — сколько раз это случилось за период, просто количество записей: визит = одно открытие страницы,
-          оплата = один оплаченный платёж. Один человек может дать несколько визитов. «Браузеров» — для справки: сколько
-          разных браузеров это сделали (по id браузера; у визитов до 20.11 его нет). Источник, кампания, страна и
-          группа A/B — первое непустое значение у браузера; регистрации и оплаты — по браузеру, где человек был в
-          аккаунте или с которого платил. Дни — по Бали (WITA).
+          Все числа — просто количество строк за период, никого не склеиваем и не угадываем. Визиты и клики — строки
+          visits, регистрации — строки users, оплаты — строки payments. Источник, кампания, объявление, страна и группа
+          A/B лежат в самой строке: браузер запоминает метку (utm) последней ссылки, по которой пришёл, и отправляет её с
+          каждым визитом, регистрацией и оплатой. У строк до 21.11 метки есть только у визита-прихода по ссылке, у старых
+          оплат — нет. Источник без utm — сайт, с которого пришли. Дни — по Бали (WITA).
         </p>
       </section>
 
@@ -173,10 +162,10 @@ export default async function FunnelPage({ params, searchParams }: {
                 {data.by_ab.map((r) => (
                   <tr key={r.ab} className="border-t border-border text-right">
                     <td className="py-1.5 text-left">{r.ab === "email" ? "email → тарифы" : "сразу тарифы"}</td>
-                    <td>{r.visit_rows}</td>
-                    <td>{r.email_gate_rows}</td>
+                    <td>{r.visit}</td>
+                    <td>{r.email_gate}</td>
                     <td>{r.emails}</td>
-                    <td>{r.paywall_rows}</td>
+                    <td>{r.paywall}</td>
                     <td>{r.signup}</td>
                     <td>{r.checkout}</td>
                     <td>{r.paid}</td>
@@ -188,9 +177,9 @@ export default async function FunnelPage({ params, searchParams }: {
           </div>
         )}
         <p className="mt-2 text-xs text-muted">
-          Группа браузера (visits.ab) выбирается случайно один раз. «email → тарифы»: на первой закрытой серии один раз
-          предлагаем ещё 3 серии за email, тарифы — после них. «email подтв.» — пользователи группы, подтвердившие email
-          кодом за период (users.email_gate_at). Остальные столбцы — как в воронке выше.
+          Группа (ab) записана в каждой строке. «email → тарифы»: на первой закрытой серии один раз предлагаем ещё 3
+          серии за email, тарифы — после них. «email подтв.» — строки users, где email подтверждён кодом за период
+          (email_gate_at). Остальные столбцы — как в воронке выше.
         </p>
       </section>
 
@@ -198,7 +187,7 @@ export default async function FunnelPage({ params, searchParams }: {
         title="По странам"
         steps={data.steps}
         rows={data.by_country.map((r) => ({ ...r, label: countryName(r.country) }))}
-        note="Страна браузера — первая непустая страна в его строках (по IP через Cloudflare / nginx)."
+        note="Страна — по IP запроса (Cloudflare / nginx), записана в каждой строке."
       />
       <StepTable
         title="По кампаниям и объявлениям"
@@ -207,18 +196,17 @@ export default async function FunnelPage({ params, searchParams }: {
           ...r,
           label: r.campaign ? `${r.campaign}${r.content ? ` → ${r.content}` : ""}` : "без кампании",
         }))}
-        note="utm_campaign → utm_content — первые непустые у браузера. Ссылки рекламы: ?utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}} (TikTok: utm_source=tiktok)."
+        note="utm_campaign → utm_content из строки. Ссылки рекламы: ?utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}} (TikTok: utm_source=tiktok)."
       />
       <StepTable
         title="По источникам"
         steps={data.steps}
         rows={data.by_source.map((r) => ({ ...r, label: r.source || "прямой / приложение" }))}
-        note="Источник браузера = первый непустой utm_source, иначе первый сайт, с которого пришёл (например, l.instagram.com). Страницы оплаты источником не записываются."
+        note="Источник = utm_source из строки, иначе сайт, с которого пришли (например, l.instagram.com)."
       />
 
       <section className="mt-6">
         <h2 className="mb-2 text-sm font-semibold">По сериалам</h2>
-        <p className="mb-2 text-xs text-muted">сколько раз · браузеров</p>
         {data.by_series.length === 0 ? (
           <p className="text-xs text-muted">пока пусто</p>
         ) : (
@@ -230,16 +218,20 @@ export default async function FunnelPage({ params, searchParams }: {
                 <th className="px-1 font-normal">открыли</th>
                 <th className="px-1 font-normal">серия</th>
                 <th className="px-1 font-normal">тарифы</th>
+                <th className="px-1 font-normal">оплаты</th>
+                <th className="px-1 font-normal">выручка</th>
               </tr>
             </thead>
             <tbody>
               {data.by_series.map((row) => (
                 <tr key={row.slug} className="border-t border-border text-right">
                   <td className="max-w-48 truncate py-1.5 text-left">{seriesName(row.slug)}</td>
-                  <td className="px-1">{row.cover_rows} <span className="text-xs text-muted">· {row.cover}</span></td>
-                  <td className="px-1">{row.series_rows} <span className="text-xs text-muted">· {row.series}</span></td>
-                  <td className="px-1">{row.episode_rows} <span className="text-xs text-muted">· {row.episode}</span></td>
-                  <td className="px-1">{row.paywall_rows} <span className="text-xs text-muted">· {row.paywall}</span></td>
+                  <td className="px-1">{row.cover}</td>
+                  <td className="px-1">{row.series}</td>
+                  <td className="px-1">{row.episode}</td>
+                  <td className="px-1">{row.paywall}</td>
+                  <td className="px-1">{row.paid}</td>
+                  <td className="px-1">{row.revenue ? formatIdr(row.revenue) : "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -251,7 +243,7 @@ export default async function FunnelPage({ params, searchParams }: {
   );
 }
 
-type StepRow = Partial<Counts> & { label: string; revenue: number };
+type StepRow = Counts & { label: string };
 
 function StepTable({ title, steps, rows, note }: {
   title: string;
@@ -281,7 +273,7 @@ function StepTable({ title, steps, rows, note }: {
                 <tr key={row.label} className="border-t border-border text-right">
                   <td className="max-w-48 truncate py-1.5 text-left" title={row.label}>{row.label}</td>
                   {steps.map((s) => (
-                    <td key={s} className={`px-1 ${count(row, s) === 0 ? "text-muted" : ""}`}>{count(row, s)}</td>
+                    <td key={s} className={`px-1 ${row[s] === 0 ? "text-muted" : ""}`}>{row[s]}</td>
                   ))}
                   <td className={`px-1 ${row.revenue ? "" : "text-muted"}`}>{row.revenue ? formatIdr(row.revenue) : "—"}</td>
                 </tr>

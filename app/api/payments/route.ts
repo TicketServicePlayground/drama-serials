@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { apiFetch, clientIp, visitorCountry } from "@/lib/api";
+import { apiFetch, browserLabel, clientIp, visitorCountry } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { isVipSerial } from "@/lib/catalog";
 
@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     method: "POST",
     token,
     ip: clientIp(request),
+    label: browserLabel(request),
     country: visitorCountry(request),
     body: {
       method: body?.method,
@@ -31,7 +32,6 @@ export async function POST(request: Request) {
       episode: body?.episode ?? null,
       locale: body?.locale,
       next: body?.next || null,
-      cid: typeof body?.cid === "string" ? body.cid.slice(0, 32) : "",
       ad,
     },
   });

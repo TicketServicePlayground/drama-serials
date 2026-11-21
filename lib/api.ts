@@ -20,9 +20,16 @@ export function clientIp(request: Request): string {
   return request.headers.get("x-real-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "";
 }
 
+/** The browser's ad label, A/B group and counter id (cookie an_src, lib/track.ts), as sent. */
+export function browserLabel(request: Request): string {
+  const cookie = request.headers.get("cookie") ?? "";
+  const match = cookie.match(/(?:^|;\s*)an_src=([^;]*)/);
+  return match ? match[1].slice(0, 2000) : "";
+}
+
 export async function apiFetch<T>(
   path: string,
-  { method = "GET", token, body, ip, country }: {
+  { method = "GET", token, body, ip, country, label }: {
     method?: string;
     token?: string | null;
     body?: unknown;
@@ -30,6 +37,8 @@ export async function apiFetch<T>(
     ip?: string;
     /** The visitor's country (visitorCountry): the API prices by it. */
     country?: string;
+    /** The browser's ad label cookie (browserLabel): kept on new accounts and payments. */
+    label?: string;
   } = {},
 ): Promise<ApiResult<T>> {
   try {
@@ -40,6 +49,7 @@ export async function apiFetch<T>(
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(ip ? { "X-Forwarded-For": ip } : {}),
         ...(country ? { "X-Country": country } : {}),
+        ...(label ? { "X-Label": label } : {}),
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
       cache: "no-store",

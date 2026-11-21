@@ -84,87 +84,91 @@ async def funnel_today(client) -> dict:
     return (await client.get(FUNNEL, params={"key": "stats-key", "period": "today"})).json()
 
 
-async def test_stats_count_rows_and_browsers_not_ips(client):
+def label_headers(country="", **label) -> dict:
+    import json
+    from urllib.parse import quote
+
+    return {"X-Label": quote(json.dumps(label)), **({"X-Country": country} if country else {})}
+
+
+async def test_stats_are_plain_counts_of_rows(client):
     before = await today(client)
     view = {"path": "/", "ip": "10.0.0.1", "ua": IPHONE}
-    # Two browsers behind one IP, same phone model: two browsers, three page views.
+    # Same IP, same phone, with an id, another id, none: four page views, nothing merged.
     await client.post("/api/v1/visits", json={**view, "cid": "d1" * 12})
     await client.post("/api/v1/visits", json={**view, "cid": "d1" * 12, "path": "/vip"})
     await client.post("/api/v1/visits", json={**view, "cid": "d2" * 12})
-    # One more view without a browser id (storage blocked): a row, not a person.
     await client.post("/api/v1/visits", json=view)
     # A click is not a page view; a bot is not written.
     await client.post("/api/v1/visits", json={**view, "cid": "d1" * 12, "event": "cover", "target": "x"})
-    await client.post("/api/v1/visits", json={**view, "ua": "Googlebot/2.1", "cid": "d3" * 12})
+    await client.post("/api/v1/visits", json={**view, "ua": "Googlebot/2.1"})
 
     after = await today(client)
     assert after["views"] - before["views"] == 4
-    assert after["browsers"] - before["browsers"] == 2
-    assert after["views_no_id"] - before["views_no_id"] == 1
     assert (await client.get(STATS)).status_code == 404
 
 
-async def test_funnel_counts_browsers_and_rows(client):
-    land = {"path": "/", "ip": "10.0.0.2", "ua": IPHONE, "utm_source": "rowtest"}
-    for cid in ("e1" * 12, "e2" * 12):
-        await client.post("/api/v1/visits", json={**land, "cid": cid})
-    # Clicks carry no utm: they count for the source of their browser.
-    plain = {"path": "/", "ip": "10.0.0.9", "ua": MAC}
-    for _ in range(2):
-        await client.post("/api/v1/visits", json={**plain, "cid": "e1" * 12, "event": "cover", "target": "x"})
-    await client.post("/api/v1/visits", json={**plain, "cid": "e2" * 12, "event": "cover", "target": "x"})
-    # A landing without a browser id: one row of its own source.
-    await client.post("/api/v1/visits", json=land)
+async def test_funnel_counts_rows_by_their_own_labels(client):
+    ad = {"ip": "10.0.0.2", "ua": IPHONE, "utm_source": "rowtest", "utm_campaign": "row-camp", "utm_content": "ad-9", "country": "CO"}
+    # The browser sends its label with every visit, the clicks too.
+    await client.post("/api/v1/visits", json={**ad, "path": "/", "cid": "e1" * 12})
+    await client.post("/api/v1/visits", json={**ad, "path": "/"})
+    for _ in range(3):
+        await client.post("/api/v1/visits", json={**ad, "path": "/", "event": "cover", "target": "x"})
+    # Without a label: no source of this campaign.
+    await client.post("/api/v1/visits", json={"ip": "10.0.0.2", "ua": IPHONE, "path": "/", "event": "cover", "target": "x"})
 
     data = await funnel_today(client)
     row = next(r for r in data["by_source"] if r["source"] == "rowtest")
-    assert (row["visit"], row["visit_rows"], row["visit_no_id"]) == (2, 3, 1)
-    assert (row["cover"], row["cover_rows"]) == (2, 3)
-    assert data["steps"][0] == "visit" and data["total"]["visit_rows"] >= 3
+    assert (row["visit"], row["cover"]) == (2, 3)
+    campaign = next(r for r in data["by_campaign"] if r["campaign"] == "row-camp")
+    assert (campaign["content"], campaign["visit"], campaign["cover"]) == ("ad-9", 2, 3)
+    assert data["steps"][0] == "visit" and data["total"]["cover"] >= 4
     assert (await client.get(FUNNEL, params={"key": "wrong"})).status_code == 404
 
 
-async def test_a_payment_counts_for_the_browser_it_was_made_from(client, gateways):
-    from tests.test_flow import ref_of
-    from app.models import Provider
+async def test_sign_ups_and_payments_keep_the_label_they_were_made_with(client, gateways):
+    from sqlalchemy import select
 
-    cid = "f1" * 12
-    await client.post("/api/v1/visits", json={"path": "/series/x", "ip": "10.0.0.3", "ua": IPHONE, "cid": cid, "country": "CO",
-                                              "utm_source": "meta", "utm_campaign": "pay-camp", "utm_content": "ad-1"})
-    # A guest account at the paywall, straight to the QR code: no signed-in page view at all.
-    token = (await client.post("/api/v1/auth/guest")).json()["token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    body = {"method": "QRIS", "product": "series_day", "slug": "x", "cid": cid}
-    payment = (await client.post("/api/v1/payments", json=body, headers=headers)).json()
+    from tests.test_flow import ref_of
+    from app.db import SessionLocal
+    from app.models import Payment, Provider, User
+
+    headers = label_headers("CO", utm_source="meta", utm_campaign="pay-camp", utm_content="ad-1", ab="email", cid="f1" * 12)
+    token = (await client.post("/api/v1/auth/guest", headers=headers)).json()["token"]
+    auth = {**headers, "Authorization": f"Bearer {token}"}
+    payment = (await client.post("/api/v1/payments", json={"method": "QRIS", "product": "series_day", "slug": "x"}, headers=auth)).json()
     gateways[Provider.XENDIT].settle(await ref_of(payment["id"]), amount=12800)
-    await client.get(f"/api/v1/payments/{payment['id']}", headers=headers)
+    await client.get(f"/api/v1/payments/{payment['id']}", headers=auth)
+
+    async with SessionLocal() as session:
+        user = (await session.scalars(select(User).where(User.src_campaign == "pay-camp"))).one()
+        assert (user.src_source, user.src_content, user.src_country, user.ab) == ("meta", "ad-1", "CO", "email")
+        paid = (await session.scalars(select(Payment).where(Payment.user_id == user.id))).one()
+        assert (paid.utm_source, paid.utm_campaign, paid.utm_content, paid.country, paid.ab, paid.client_id) == (
+            "meta", "pay-camp", "ad-1", "CO", "email", "f1" * 12)
 
     data = await funnel_today(client)
     row = next(r for r in data["by_campaign"] if r["campaign"] == "pay-camp")
-    assert (row["content"], row["visit"], row["signup"], row["checkout"], row["paid"], row["revenue"]) == ("ad-1", 1, 1, 1, 1, 12800)
+    assert (row["signup"], row["checkout"], row["paid"], row["revenue"]) == (1, 1, 1, 12800)
     assert next(r for r in data["by_country"] if r["country"] == "CO")["paid"] >= 1
+    assert next(r for r in data["by_ab"] if r["ab"] == "email")["paid"] >= 1
     only_co = (await client.get(FUNNEL, params={"key": "stats-key", "period": "today", "country": "CO"})).json()
     assert {r["country"] for r in only_co["by_country"]} == {"CO"}
+    # A junk label is dropped, not stored.
+    bad = await client.post("/api/v1/auth/guest", headers={"X-Label": "%7Bnot json", "X-Country": "ZZZ"})
+    assert bad.status_code == 200
 
 
-async def test_ab_groups_in_the_funnel(client):
-    from sqlalchemy import select
-
-    from app.db import SessionLocal
-    from app.models import User
-
-    for group, cid in (("paywall", "a7" * 12), ("email", "b7" * 12)):
-        headers = await signup(client)
-        base = {"ua": IPHONE, "ip": "10.0.0.4", "ab": group, "cid": cid}
-        await client.post("/api/v1/visits", json={**base, "path": "/series/ab-show"}, headers=headers)
+async def test_ab_groups_and_series_in_the_funnel(client):
+    for group in ("paywall", "email"):
+        base = {"ua": IPHONE, "ip": "10.0.0.4", "ab": group}
+        await client.post("/api/v1/visits", json={**base, "path": "/series/ab-show"})
         event = "paywall" if group == "paywall" else "email_gate"
-        await client.post("/api/v1/visits", json={**base, "path": "/series/ab-show", "event": event, "target": "ab-show/8"}, headers=headers)
+        await client.post("/api/v1/visits", json={**base, "path": "/series/ab-show", "event": event, "target": "ab-show/8"})
     await client.post("/api/v1/visits", json={"ua": IPHONE, "ip": "10.0.0.5", "ab": "junk", "path": "/"})
-    async with SessionLocal() as session:
-        groups = {u.ab for u in (await session.scalars(select(User).where(User.ab != ""))).all()}
-    assert {"paywall", "email"} <= groups and "junk" not in groups
-    rows = {r["ab"]: r for r in (await funnel_today(client))["by_ab"]}
+    data = await funnel_today(client)
+    rows = {r["ab"]: r for r in data["by_ab"]}
     assert rows["paywall"]["paywall"] >= 1 and rows["email"]["email_gate"] >= 1 and "junk" not in rows
-    assert rows["email"]["signup"] >= 1 and "emails" in rows["email"]
-    series = next(r for r in (await funnel_today(client))["by_series"] if r["slug"] == "ab-show")
+    series = next(r for r in data["by_series"] if r["slug"] == "ab-show")
     assert series["series"] == 2 and series["paywall"] == 1

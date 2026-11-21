@@ -1,5 +1,7 @@
 // The site's own counter (backend/app/visits.py): page views from components/VisitCounter and
-// funnel clicks from here. No cookies; a person is the browser's random id (clientId).
+// funnel clicks from here. Each visit carries the browser's ad label (the utm_* of the last link
+// it came by), so every row says itself where it is from; the server counts rows and merges nothing.
+// The same label goes to the site's server in the cookie an_src, for sign-ups and payments.
 
 import { gateGroup } from "./ab";
 
@@ -20,6 +22,28 @@ export interface VisitBeacon {
 }
 
 const CLIENT_ID_KEY = "vid";
+const LABEL_KEY = "an_src";
+const UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_content"] as const;
+type Utm = Partial<Record<(typeof UTM)[number], string>>;
+
+/** The ad label of the last link this browser came by; a new link with utm_* replaces it. */
+function adLabel(beacon: VisitBeacon): Utm {
+  if (UTM.some((k) => beacon[k])) {
+    const label = Object.fromEntries(UTM.map((k) => [k, beacon[k] ?? ""])) as Utm;
+    try {
+      localStorage.setItem(LABEL_KEY, JSON.stringify(label));
+    } catch {
+      // Storage blocked: only this visit has it.
+    }
+    return label;
+  }
+  try {
+    const kept = JSON.parse(localStorage.getItem(LABEL_KEY) ?? "{}");
+    return Object.fromEntries(UTM.map((k) => [k, typeof kept?.[k] === "string" ? kept[k] : ""])) as Utm;
+  } catch {
+    return {};
+  }
+}
 
 /** A random id kept in this browser: the counter tells people apart by it (and nothing else). */
 export function clientId(): string {
@@ -31,7 +55,7 @@ export function clientId(): string {
     }
     return id;
   } catch {
-    // Storage is blocked (private mode): the daily hash on the server stands in.
+    // Storage is blocked (private mode): rows without an id.
     return "";
   }
 }
@@ -40,7 +64,12 @@ export function sendVisit(beacon: VisitBeacon): void {
   if (typeof window === "undefined" || navigator.webdriver || window.location.pathname.startsWith("/stats")) return;
   const cid = clientId();
   // The A/B group goes along only when it can stay the same (storage works).
-  const payload = new Blob([JSON.stringify({ ...beacon, cid, ab: cid ? gateGroup() : "" })], { type: "application/json" });
+  const ab = cid ? gateGroup() : "";
+  const label = adLabel(beacon);
+  // For the site's server: a sign-up or a payment made in this browser keeps the same label.
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${LABEL_KEY}=${encodeURIComponent(JSON.stringify({ ...label, ab, cid }))}; path=/; max-age=15552000; SameSite=Lax${secure}`;
+  const payload = new Blob([JSON.stringify({ ...beacon, ...label, cid, ab })], { type: "application/json" });
   if (!navigator.sendBeacon?.("/api/v", payload)) {
     fetch("/api/v", { method: "POST", body: payload, keepalive: true }).catch(() => {});
   }

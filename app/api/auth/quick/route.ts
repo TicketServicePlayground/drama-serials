@@ -1,4 +1,4 @@
-import { apiFetch, clientIp, type Account } from "@/lib/api";
+import { visitorCountry, browserLabel, apiFetch, clientIp, type Account } from "@/lib/api";
 import { getToken, startSession } from "@/lib/auth";
 
 /**
@@ -11,6 +11,8 @@ export async function POST(request: Request) {
     method: "POST",
     token: (await getToken()) ?? undefined,
     ip: clientIp(request),
+    country: visitorCountry(request),
+    label: browserLabel(request),
     body: {
       email: body?.email ?? "",
       locale: body?.locale ?? "en",

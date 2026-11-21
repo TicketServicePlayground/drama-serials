@@ -1,8 +1,8 @@
 """The site's own visit counter: page views in, counts and the raw rows out for the team.
 
-No cookies and no raw IPs are kept. Each row keeps the browser's random id (client_id), which is
-what people are counted by, and a daily HMAC(secret, day + IP + browser) (visitor), which is
-stored only, never used to merge anyone.
+No raw IPs are kept. Each row is one page view or click as the browser sent it, with the ad
+label the browser keeps (utm_*), its random id (client_id) and a daily HMAC(secret, day + IP +
+browser) (visitor). The counts below are plain counts of rows: nobody is merged or guessed.
 """
 import csv
 import hashlib
@@ -139,60 +139,22 @@ async def track(body: PageView, user: CurrentUser, session: Session):
     return None
 
 
-async def link_browser(session, user, cid: str) -> None:
-    """The browser a payment is made from is the payer's: its visits so far get their user id.
-    Someone who signs up at paying and goes straight to the payment page sends no signed-in page
-    view, so without this their payment would belong to no browser. Only this exact browser id."""
-    if not CLIENT_ID_RE.match(cid):
-        return
-    await session.execute(
-        text("UPDATE visits SET user_id = :user WHERE client_id = :cid AND user_id IS NULL"),
-        {"user": user.id, "cid": cid},
-    )
-
-
 # --- how the numbers are counted --------------------------------------------------------------
 #
-# No guessing, no merging of people by IP or browser model:
-#   - a browser is visits.client_id, the random id the browser keeps (lib/track.ts);
-#     rows without one (storage blocked) are counted as rows, never as people;
-#   - a browser's source / campaign / ad / country / A/B group is the first non-empty value in
-#     its rows, ever; a row without a browser id has its own;
-#   - a sign-up and a payment belong to the user's browser: the first one the user was signed in
-#     on (visits.user_id); a user never seen on a browser has no source;
-#   - days are Bali days (WITA); sign-ups by users.created_at, started payments by
-#     payments.created_at, paid ones by payments.paid_at.
+# Every number is a count of rows, nothing else: no people, no merging, no linking tables.
+#   - visits: one row per page view or click; its source / campaign / ad / country / A/B group
+#     are in the row itself (the browser sends its ad label with every visit, lib/track.ts);
+#   - sign-ups: rows of users by created_at, with the label stored on them (users.src_*, ab);
+#   - payments: rows of payments by created_at (started) and by paid_at with status paid,
+#     with the label stored on them (payments.utm_*, country, ab);
+#   - source = utm_source, or for visits without one the site they came from (referrer);
+#   - days are Bali days (WITA).
 
-LABELS = ("source", "campaign", "content", "country", "ab")
-# Browser labels and each user's browser, over all time.
-LABELED = """
-    bl AS (
-      SELECT client_id,
-        coalesce((array_agg(utm_source ORDER BY at) FILTER (WHERE utm_source <> ''))[1],
-                 (array_agg(referrer ORDER BY at) FILTER (WHERE referrer <> ''))[1], '') AS source,
-        coalesce((array_agg(utm_campaign ORDER BY at) FILTER (WHERE utm_campaign <> ''))[1], '') AS campaign,
-        coalesce((array_agg(utm_content ORDER BY at) FILTER (WHERE utm_content <> ''))[1], '') AS content,
-        coalesce((array_agg(country ORDER BY at) FILTER (WHERE country <> ''))[1], '') AS country,
-        coalesce((array_agg(ab ORDER BY at) FILTER (WHERE ab <> ''))[1], '') AS ab
-      FROM visits WHERE client_id <> '' GROUP BY client_id
-    ), ub AS (
-      SELECT DISTINCT ON (user_id) user_id, client_id FROM visits
-      WHERE user_id IS NOT NULL AND client_id <> '' ORDER BY user_id, at
-    ), ul AS (
-      SELECT u.id AS user_id, coalesce(bl.source, '') AS source, coalesce(bl.campaign, '') AS campaign,
-        coalesce(bl.content, '') AS content, coalesce(bl.country, '') AS country, coalesce(bl.ab, '') AS ab
-      FROM users u LEFT JOIN ub ON ub.user_id = u.id LEFT JOIN bl ON bl.client_id = ub.client_id
-    )
-"""
 DAY = "(at AT TIME ZONE :tz)::date"
 IN_PERIOD = "({col} AT TIME ZONE :tz)::date >= :start AND ({col} AT TIME ZONE :tz)::date < :end"
-
-# Steps of the funnel. From visits rows: `step` = browsers (distinct client_id), `step_rows` = rows.
-# From the tables: `signup` = users, `checkout` = payments started, `paid` = payments paid.
-VISIT_STEPS = ["visit", "cover", "auth_open", "series", "episode", "email_gate", "paywall"]
-TABLE_STEPS = ["signup", "checkout", "paid"]
 FUNNEL_STEPS = ["visit", "cover", "auth_open", "signup", "series", "episode", "email_gate", "paywall", "checkout", "paid"]
 PERIODS = {"today": (0, -1), "yesterday": (1, 0), "7d": (6, -1), "30d": (29, -1)}
+LABELS = "source, campaign, content, country, ab"
 
 
 def _rows(result) -> list[dict]:
@@ -200,116 +162,57 @@ def _rows(result) -> list[dict]:
 
 
 def _facts() -> str:
-    """One row per counted thing in the period: kind, browser id ('' = none), amount, labels."""
-    own = ", ".join(
-        f"CASE WHEN bl.client_id IS NULL THEN {expr} ELSE bl.{name} END AS {name}"
-        for name, expr in (
-            ("source", "coalesce(nullif(v.utm_source, ''), v.referrer)"),
-            ("campaign", "v.utm_campaign"),
-            ("content", "v.utm_content"),
-            ("country", "v.country"),
-            ("ab", "v.ab"),
-        )
-    )
-    labels = ", ".join(f"ul.{n}" for n in LABELS)
+    """One row per counted thing in the period: its kind, amount and labels."""
+    user_labels = "coalesce(u.src_source, ''), coalesce(u.src_campaign, ''), coalesce(u.src_content, ''), coalesce(u.src_country, ''), u.ab"
+    payment_labels = "p.utm_source, p.utm_campaign, p.utm_content, p.country, p.ab"
+    visit = f"SELECT {{kind}} AS kind, 0 AS amount, coalesce(nullif(utm_source, ''), referrer) AS source, utm_campaign AS campaign, utm_content AS content, country, ab, path, target FROM visits WHERE {IN_PERIOD.format(col='at')}"
     return f"""
-        WITH {LABELED}, ev AS (
-          SELECT v.event, v.path, v.target, v.client_id, {own}
-          FROM visits v LEFT JOIN bl ON bl.client_id = v.client_id AND v.client_id <> ''
-          WHERE {IN_PERIOD.format(col="v.at")}
-        ), facts AS (
-          SELECT CASE WHEN event = '' THEN 'visit' ELSE event END AS kind, client_id, 0 AS amount, {", ".join(LABELS)} FROM ev
+        WITH facts AS (
+          {visit.format(kind="CASE WHEN event = '' THEN 'visit' ELSE event END")}
           UNION ALL
-          SELECT 'series', client_id, 0, {", ".join(LABELS)} FROM ev WHERE event = '' AND path LIKE '/series/%'
+          {visit.format(kind="'series'")} AND event = '' AND path LIKE '/series/%'
           UNION ALL
-          SELECT 'signup', '', 0, {labels} FROM users u JOIN ul ON ul.user_id = u.id WHERE {IN_PERIOD.format(col="u.created_at")}
+          SELECT 'signup', 0, {user_labels}, '', '' FROM users u WHERE {IN_PERIOD.format(col='u.created_at')}
           UNION ALL
-          SELECT 'emails', '', 0, {labels} FROM users u JOIN ul ON ul.user_id = u.id WHERE {IN_PERIOD.format(col="u.email_gate_at")}
+          SELECT 'emails', 0, {user_labels}, '', '' FROM users u WHERE {IN_PERIOD.format(col='u.email_gate_at')}
           UNION ALL
-          SELECT 'checkout', '', p.amount, {labels} FROM payments p JOIN ul ON ul.user_id = p.user_id WHERE {IN_PERIOD.format(col="p.created_at")}
+          SELECT 'checkout', p.amount, {payment_labels}, '', coalesce(p.target_slug, '') FROM payments p WHERE {IN_PERIOD.format(col='p.created_at')}
           UNION ALL
-          SELECT 'paid', '', p.amount, {labels} FROM payments p JOIN ul ON ul.user_id = p.user_id
-          WHERE p.status = 'paid' AND {IN_PERIOD.format(col="p.paid_at")}
+          SELECT 'paid', p.amount, {payment_labels}, '', coalesce(p.target_slug, '') FROM payments p
+          WHERE p.status = 'paid' AND {IN_PERIOD.format(col='p.paid_at')}
         )
     """
 
 
-def _counts() -> str:
-    parts = []
-    for step in VISIT_STEPS:
-        parts.append(f"count(DISTINCT client_id) FILTER (WHERE kind = '{step}' AND client_id <> '') AS {step}")
-        parts.append(f"count(*) FILTER (WHERE kind = '{step}') AS {step}_rows")
-    parts.append("count(*) FILTER (WHERE kind = 'visit' AND client_id = '') AS visit_no_id")
-    for step in TABLE_STEPS + ["emails"]:
-        parts.append(f"count(*) FILTER (WHERE kind = '{step}') AS {step}")
-    parts.append("coalesce(sum(amount) FILTER (WHERE kind = 'paid'), 0) AS revenue")
-    return ", ".join(parts)
+COUNTS = ", ".join(
+    [f"count(*) FILTER (WHERE kind = '{step}') AS {step}" for step in FUNNEL_STEPS + ["emails"]]
+    + ["coalesce(sum(amount) FILTER (WHERE kind = 'paid'), 0) AS revenue"]
+)
 
 
 @router.get("/stats")
 async def stats(session: Session, key: Annotated[str, Query()] = ""):
-    """Page views (rows with event ""), browsers among them, sign-ups and payments, by Bali day.
-    A session is a browser's page view after 30 minutes or more without one; a return session
-    is any but the browser's first."""
+    """Page views (visits rows with event ""), sign-ups and payments, by Bali day; plain counts."""
     if not settings.stats_key or not hmac.compare_digest(key, settings.stats_key):
         return JSONResponse({"error": "not_found"}, status_code=404)
     tz = {"tz": TZ_NAME}
     today = datetime.now(TZ).date()
 
-    sessions = {
-        row.d: (row.sessions, row.returns)
-        for row in (
-            await session.execute(
-                text(
-                    f"""
-                    WITH s AS (
-                      SELECT at, lag(at) OVER (PARTITION BY client_id ORDER BY at) AS prev
-                      FROM visits WHERE event = '' AND client_id <> ''
-                    )
-                    SELECT {DAY} AS d,
-                      count(*) FILTER (WHERE prev IS NULL OR at - prev >= interval '30 minutes') AS sessions,
-                      count(*) FILTER (WHERE prev IS NOT NULL AND at - prev >= interval '30 minutes') AS returns
-                    FROM s WHERE {DAY} >= :start GROUP BY 1
-                    """
-                ),
-                {**tz, "start": today - timedelta(days=29)},
-            )
-        ).all()
-    }
-
     async def totals(since_days: int, until_days: int = -1) -> dict:
-        start, end = today - timedelta(days=since_days), today - timedelta(days=until_days)
-        params = {**tz, "start": start, "end": end}
-        views = (
+        params = {**tz, "start": today - timedelta(days=since_days), "end": today - timedelta(days=until_days)}
+        row = (
             await session.execute(
                 text(
-                    "SELECT count(*) AS views, count(DISTINCT nullif(client_id, '')) AS browsers, "
-                    "count(*) FILTER (WHERE client_id = '') AS views_no_id, "
-                    "count(*) FILTER (WHERE user_id IS NOT NULL) AS signed_in_views "
-                    f"FROM visits WHERE event = '' AND {IN_PERIOD.format(col='at')}"
-                ),
-                params,
-            )
-        ).one()
-        tables = (
-            await session.execute(
-                text(
-                    f"SELECT (SELECT count(*) FROM users WHERE {IN_PERIOD.format(col='created_at')}) AS signups, "
+                    f"SELECT (SELECT count(*) FROM visits WHERE event = '' AND {IN_PERIOD.format(col='at')}) AS views, "
+                    f"(SELECT count(*) FROM visits WHERE event = '' AND user_id IS NOT NULL AND {IN_PERIOD.format(col='at')}) AS signed_in_views, "
+                    f"(SELECT count(*) FROM users WHERE {IN_PERIOD.format(col='created_at')}) AS signups, "
                     f"(SELECT count(*) FROM payments WHERE status = 'paid' AND {IN_PERIOD.format(col='paid_at')}) AS paid, "
                     f"(SELECT coalesce(sum(amount), 0) FROM payments WHERE status = 'paid' AND {IN_PERIOD.format(col='paid_at')}) AS revenue"
                 ),
                 params,
             )
         ).one()
-        days = [v for d, v in sessions.items() if start <= d < end]
-        return {
-            **dict(views._mapping),
-            "signups": tables.signups,
-            "paid": tables.paid,
-            "revenue": int(tables.revenue),
-            "sessions": sum(v[0] for v in days),
-            "returns": sum(v[1] for v in days),
-        }
+        return {**dict(row._mapping), "revenue": int(row.revenue)}
 
     week = {**tz, "start": today - timedelta(days=6), "end": today + timedelta(days=1)}
 
@@ -317,8 +220,8 @@ async def stats(session: Session, key: Annotated[str, Query()] = ""):
         return _rows(
             await session.execute(
                 text(
-                    f"SELECT {column} AS name, count(*) AS views, count(DISTINCT nullif(client_id, '')) AS browsers "
-                    f"FROM visits WHERE event = '' AND {IN_PERIOD.format(col='at')} AND {column} <> '' "
+                    f"SELECT {column} AS name, count(*) AS views FROM visits "
+                    f"WHERE event = '' AND {IN_PERIOD.format(col='at')} AND {column} <> '' "
                     f"GROUP BY {column} ORDER BY views DESC LIMIT {limit}"
                 ),
                 week,
@@ -333,11 +236,10 @@ async def stats(session: Session, key: Annotated[str, Query()] = ""):
                   SELECT generate_series(CAST(:start AS date), CAST(:today AS date), interval '1 day')::date AS d
                 )
                 SELECT days.d AS day,
-                  (SELECT count(DISTINCT nullif(client_id, '')) FROM visits WHERE event = '' AND {DAY} = days.d) AS browsers,
                   (SELECT count(*) FROM visits WHERE event = '' AND {DAY} = days.d) AS views,
-                  (SELECT count(*) FROM visits WHERE event = '' AND client_id = '' AND {DAY} = days.d) AS views_no_id,
                   (SELECT count(*) FROM users WHERE (created_at AT TIME ZONE :tz)::date = days.d) AS signups,
-                  (SELECT count(*) FROM payments WHERE status = 'paid' AND (paid_at AT TIME ZONE :tz)::date = days.d) AS paid
+                  (SELECT count(*) FROM payments WHERE status = 'paid' AND (paid_at AT TIME ZONE :tz)::date = days.d) AS paid,
+                  (SELECT coalesce(sum(amount), 0) FROM payments WHERE status = 'paid' AND (paid_at AT TIME ZONE :tz)::date = days.d) AS revenue
                 FROM days ORDER BY days.d DESC
                 """
             ),
@@ -345,18 +247,18 @@ async def stats(session: Session, key: Annotated[str, Query()] = ""):
         )
     )
     for row in by_day:
-        row["sessions"], row["returns"] = sessions.get(row["day"], (0, 0))
         row["day"] = row["day"].isoformat()
+        row["revenue"] = int(row["revenue"])
     recent = _rows(
         await session.execute(
             text(
-                "SELECT at, client_id, path, referrer, utm_source, lang, device, country, "
+                "SELECT at, client_id, path, referrer, utm_source, utm_campaign, lang, device, country, "
                 "(user_id IS NOT NULL) AS signed_in FROM visits WHERE event = '' ORDER BY at DESC LIMIT 50"
             )
         )
     )
     for row in recent:
-        row["at"] = row["at"].isoformat()
+        row["at"] = row["at"].astimezone(TZ).isoformat()
 
     return {
         "timezone": TZ_NAME,
@@ -368,6 +270,7 @@ async def stats(session: Session, key: Annotated[str, Query()] = ""):
         "pages": await top("path"),
         "referrers": await top("referrer"),
         "utm": await top("utm_source"),
+        "campaigns": await top("utm_campaign"),
         "langs": await top("lang"),
         "devices": await top("device"),
         "recent": recent,
@@ -381,8 +284,8 @@ async def funnel(
     period: Annotated[str, Query()] = "7d",
     country: Annotated[str, Query()] = "",
 ):
-    """Counts of each step in the period, whole and by source, country, campaign, A/B group and
-    series; how they are counted is above (`how the numbers are counted`)."""
+    """How many times each step happened in the period, whole and by source, country, campaign,
+    A/B group and series; counted as described above."""
     if not settings.stats_key or not hmac.compare_digest(key, settings.stats_key):
         return JSONResponse({"error": "not_found"}, status_code=404)
     since, until = PERIODS.get(period, PERIODS["7d"])
@@ -395,7 +298,7 @@ async def funnel(
     async def grouped(columns: str) -> list[dict]:
         rows = _rows(
             await session.execute(
-                text(f"{facts} SELECT {columns}, {_counts()} FROM facts {where} GROUP BY {columns} ORDER BY visit_rows DESC, {columns}"),
+                text(f"{facts} SELECT {columns}, {COUNTS} FROM facts {where} GROUP BY {columns} ORDER BY visit DESC, {columns}"),
                 params,
             )
         )
@@ -403,26 +306,28 @@ async def funnel(
             row["revenue"] = int(row["revenue"])
         return rows
 
-    by_source = await grouped("source")
-    total = {k: sum(r[k] for r in by_source) for k in by_source[0] if k != "source"} if by_source else {}
+    total_row = _rows(await session.execute(text(f"{facts} SELECT {COUNTS} FROM facts {where}"), params))[0]
+    total_row["revenue"] = int(total_row["revenue"])
     series = _rows(
         await session.execute(
             text(
-                f"""{facts}, s AS (
-                  SELECT kind, client_id,
-                    CASE WHEN kind IN ('visit', 'series') THEN split_part(path, '/', 3) ELSE split_part(target, '/', 1) END AS slug
-                  FROM (SELECT CASE WHEN event = '' THEN 'series' ELSE event END AS kind, client_id, path, target, country
-                        FROM ev WHERE event IN ('cover', 'episode', 'paywall') OR (event = '' AND path LIKE '/series/%')) e
-                  {where}
-                )
-                SELECT slug,
-                  {", ".join(f"count(DISTINCT nullif(client_id, '')) FILTER (WHERE kind = '{k}') AS {k}, count(*) FILTER (WHERE kind = '{k}') AS {k}_rows" for k in ("cover", "series", "episode", "paywall"))}
-                FROM s WHERE slug <> '' GROUP BY slug ORDER BY cover_rows DESC, series_rows DESC, slug
+                f"""{facts}
+                SELECT CASE WHEN kind = 'series' THEN split_part(path, '/', 3) ELSE split_part(target, '/', 1) END AS slug,
+                  count(*) FILTER (WHERE kind = 'cover') AS cover,
+                  count(*) FILTER (WHERE kind = 'series') AS series,
+                  count(*) FILTER (WHERE kind = 'episode') AS episode,
+                  count(*) FILTER (WHERE kind = 'paywall') AS paywall,
+                  count(*) FILTER (WHERE kind = 'paid') AS paid,
+                  coalesce(sum(amount) FILTER (WHERE kind = 'paid'), 0) AS revenue
+                FROM facts {where} AND kind IN ('cover', 'series', 'episode', 'paywall', 'paid')
+                GROUP BY 1
+                ORDER BY cover DESC, series DESC, 1
                 """
             ),
             params,
         )
     )
+    series = [dict(r, revenue=int(r["revenue"])) for r in series if r["slug"]]
     countries = [r[0] for r in (await session.execute(text(f"{facts} SELECT DISTINCT country FROM facts WHERE country <> '' ORDER BY 1"), params)).all()]
     return {
         "timezone": TZ_NAME,
@@ -430,9 +335,8 @@ async def funnel(
         "country": country,
         "countries": countries,
         "steps": FUNNEL_STEPS,
-        "visit_steps": VISIT_STEPS,
-        "total": total,
-        "by_source": by_source,
+        "total": total_row,
+        "by_source": await grouped("source"),
         "by_country": await grouped("country"),
         "by_campaign": await grouped("campaign, content"),
         "by_ab": [r for r in await grouped("ab") if r["ab"]],

@@ -19,6 +19,7 @@ from sqlalchemy.exc import IntegrityError
 from app import mailer, notify
 from app.api import CurrentUser, Session, account, client_ip, error
 from app.config import settings
+from app.labels import label_of, stamp_new_user
 from app.models import Payment, User
 from app.security import (
     code_matches,
@@ -143,6 +144,7 @@ async def guest_signup(request: Request, session: Session):
     """Paying by QRIS or SBP needs no email: an account without one, kept by the session cookie.
     Paying accepts the Terms (the paywall says so next to the buttons)."""
     user = User(terms_version=settings.terms_version, terms_accepted_at=datetime.now(UTC))
+    stamp_new_user(user, label_of(request))
     session.add(user)
     await session.commit()
     logger.info("audit register-guest user=%s ip=%s", user.id, client_ip(request))
@@ -180,6 +182,7 @@ async def quick_signup(body: QuickSignup, request: Request, session: Session, cu
             terms_version=settings.terms_version,
             terms_accepted_at=datetime.now(UTC),
         )
+        stamp_new_user(user, label_of(request))
         session.add(user)
     if body.source == "email_gate":
         user.email_gate_at = datetime.now(UTC)

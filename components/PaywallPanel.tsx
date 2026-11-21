@@ -6,7 +6,7 @@ import { Button, Spinner } from "@heroui/react";
 import { formatApprox, formatIdr, type OfferState, type PayMethod, type PriceView, type ProductId } from "@/lib/billing-types";
 import { getDictionary, withLocale, type Locale } from "@/lib/i18n";
 import { trackPixel } from "@/lib/pixel";
-import { clientId, trackEvent } from "@/lib/track";
+import { trackEvent } from "@/lib/track";
 import { CrownIcon } from "./icons";
 
 export interface PaywallTarget {
@@ -193,8 +193,6 @@ export function PaywallPanel({ locale, target, series, signedIn = true, hasEmail
           episode: plan === "episode" ? target?.episode : undefined,
           locale,
           next: plan === "series_day" ? seriesSlug : target?.slug,
-          // This browser's counter id: the payment counts for the browser it was made from.
-          cid: clientId(),
         }),
       });
       const data = await response.json().catch(() => ({}));

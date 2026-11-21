@@ -129,6 +129,15 @@ class Payment(Base):
     # What the Meta pixel saw when the payment was opened: {ip, ua, fbp, fbc}
     # (app/meta_capi.py sends it with the server-side Purchase).
     ad_context: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    # What the paying browser sent (lib/track.ts, cookie an_src): its ad label, A/B group and
+    # counter id, and the country of the request. Stored as is, for the stats.
+    utm_source: Mapped[str] = mapped_column(String(80), server_default="", default="")
+    utm_medium: Mapped[str] = mapped_column(String(80), server_default="", default="")
+    utm_campaign: Mapped[str] = mapped_column(String(150), server_default="", default="")
+    utm_content: Mapped[str] = mapped_column(String(150), server_default="", default="")
+    country: Mapped[str] = mapped_column(String(2), server_default="", default="")
+    ab: Mapped[str] = mapped_column(String(16), server_default="", default="")
+    client_id: Mapped[str] = mapped_column(String(32), server_default="", default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

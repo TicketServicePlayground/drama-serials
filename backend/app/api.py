@@ -25,6 +25,7 @@ from app.billing import (
 )
 from app.config import settings
 from app.db import get_session
+from app.labels import label_of, stamp_new_user, stamp_payment
 from app.models import (
     AccessGrant,
     EpisodeMedia,
@@ -102,8 +103,6 @@ class NewPayment(BaseModel):
     next: str | None = None
     # The visitor's browser as the pixel sees it (the site reads the _fbp/_fbc cookies).
     ad: AdContext | None = None
-    # The paying browser's counter id (lib/track.ts clientId), "" = unknown.
-    cid: str = Field(default="", max_length=32)
 
 
 async def current_user(
@@ -305,6 +304,7 @@ async def register(body: Registration, request: Request, session: Session):
         terms_version=settings.terms_version,
         terms_accepted_at=datetime.now(UTC),
     )
+    stamp_new_user(user, label_of(request))
     session.add(user)
     try:
         await session.commit()
@@ -352,9 +352,6 @@ async def start_payment(body: NewPayment, request: Request, user: CurrentUser, s
     if method == PaymentMethod.CARD and not user.email:
         return error("email_required", 400)
     product = products()[body.product]
-    from app.visits import link_browser  # app.visits imports this module
-
-    await link_browser(session, user, body.cid)
     locale = body.locale if body.locale in LOCALES else "en"
     next_slug = body.next if body.next and SLUG_RE.match(body.next) else None
     target_slug = target_episode = None
@@ -411,6 +408,7 @@ async def start_payment(body: NewPayment, request: Request, user: CurrentUser, s
         terms_version=settings.terms_version,
         ad_context=ad_context(body.ad, client_ip(request)),
     )
+    stamp_payment(payment, label_of(request))
     gateway = provider(payment.provider)
     payment.provider_ref = gateway.reference(payment)
     session.add(payment)

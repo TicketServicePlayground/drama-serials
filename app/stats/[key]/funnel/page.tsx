@@ -29,17 +29,21 @@ interface Funnel {
 
 // [name, short name, how it is counted]
 const STEP: Record<Step, [string, string, string]> = {
-  visit: ["Зашли на сайт", "зашли", "браузеры с просмотром страницы"],
-  cover: ["Нажали на обложку", "обложка", "браузеры с событием cover"],
-  auth_open: ["Увидели регистрацию", "окно рег.", "браузеры с событием auth_open"],
-  signup: ["Зарегистрировались", "рег.", "строки users, созданные за период"],
-  series: ["Открыли сериал", "сериал", "браузеры с просмотром /series/…"],
-  episode: ["Нажали на серию", "серия", "браузеры с событием episode"],
-  email_gate: ["Попросили email", "email", "браузеры с событием email_gate"],
-  paywall: ["Увидели тарифы", "тарифы", "браузеры с событием paywall"],
-  checkout: ["Начали оплату", "оплата", "строки payments, созданные за период"],
-  paid: ["Оплатили", "оплатили", "строки payments со status = paid, оплаченные за период"],
+  visit: ["Визиты (просмотры страниц)", "визиты", "каждое открытие любой страницы"],
+  cover: ["Нажатия на обложку", "обложка", "каждое нажатие на обложку"],
+  auth_open: ["Показы окна регистрации", "окно рег.", "каждый показ окна"],
+  signup: ["Регистрации", "рег.", "новые аккаунты"],
+  series: ["Открытия страницы сериала", "сериал", "каждое открытие /series/…"],
+  episode: ["Нажатия на серию", "серия", "каждое нажатие на серию"],
+  email_gate: ["Показы email-окна", "email", "каждый показ окна «серии за email»"],
+  paywall: ["Показы тарифов", "тарифы", "каждый показ тарифов"],
+  checkout: ["Начатые оплаты", "оплата", "каждый созданный платёж"],
+  paid: ["Оплаты", "оплатили", "каждый оплаченный платёж"],
 };
+const VISIT_STEPS = new Set<Step>(["visit", "cover", "auth_open", "series", "episode", "email_gate", "paywall"]);
+/** How many times: rows of visits for the site's steps, rows of users / payments for the rest. */
+const count = (row: Partial<Counts>, step: Step) => (VISIT_STEPS.has(step) ? row[`${step as VisitStep}_rows`] : row[step]) ?? 0;
+
 const PERIODS: [string, string][] = [
   ["today", "Сегодня"],
   ["yesterday", "Вчера"],
@@ -113,20 +117,20 @@ export default async function FunnelPage({ params, searchParams }: {
 
       <section>
         <div className="mb-1 flex justify-end gap-3 text-xs text-muted">
-          <span className="w-16 text-right">число</span>
-          <span className="w-16 text-right">строк</span>
+          <span className="w-16 text-right">сколько</span>
+          <span className="w-20 text-right">браузеров</span>
         </div>
         <ol className="flex flex-col gap-1.5">
           {data.steps.map((step, i) => {
-            const rows = data.visit_steps.includes(step as VisitStep) ? data.total[`${step as VisitStep}_rows`] : undefined;
+            const browsers = data.visit_steps.includes(step as VisitStep) ? data.total[step] : undefined;
             return (
               <li key={step} className="rounded-lg border border-border bg-surface px-3 py-2">
                 <div className="flex items-center gap-3 text-sm tabular-nums">
                   <span className="flex-1 truncate">
                     <span className="text-muted">{i + 1}.</span> {STEP[step][0]}
                   </span>
-                  <span className="w-16 text-right text-base font-bold">{data.total[step] ?? 0}</span>
-                  <span className="w-16 text-right text-xs text-muted">{rows ?? ""}</span>
+                  <span className="w-16 text-right text-base font-bold">{count(data.total, step)}</span>
+                  <span className="w-20 text-right text-xs text-muted">{browsers ?? ""}</span>
                 </div>
                 <p className="text-xs text-muted">{STEP[step][2]}</p>
               </li>
@@ -137,11 +141,11 @@ export default async function FunnelPage({ params, searchParams }: {
           Выручка за период: {formatIdr(data.total.revenue ?? 0)} · просмотров без id браузера: {data.total.visit_no_id ?? 0}
         </p>
         <p className="mt-2 text-xs text-muted">
-          Как считается, без догадок. Браузер = id, который браузер хранит у себя (client_id); склейки людей по IP или
-          модели телефона нет. «Строк» — сколько всего таких строк в таблице visits, включая повторы и строки без id.
-          Источник, кампания, объявление, страна и группа A/B браузера — первое непустое значение в его строках.
-          Регистрация и оплата относятся к браузеру, в котором пользователь впервые был в аккаунте (или с которого
-          создал платёж); если такого нет — к «без источника», но в итог они всё равно входят. Дни — по Бали (WITA).
+          Все числа — сколько раз это случилось за период, просто количество записей: визит = одно открытие страницы,
+          оплата = один оплаченный платёж. Один человек может дать несколько визитов. «Браузеров» — для справки: сколько
+          разных браузеров это сделали (по id браузера; у визитов до 20.11 его нет). Источник, кампания, страна и
+          группа A/B — первое непустое значение у браузера; регистрации и оплаты — по браузеру, где человек был в
+          аккаунте или с которого платил. Дни — по Бали (WITA).
         </p>
       </section>
 
@@ -169,10 +173,10 @@ export default async function FunnelPage({ params, searchParams }: {
                 {data.by_ab.map((r) => (
                   <tr key={r.ab} className="border-t border-border text-right">
                     <td className="py-1.5 text-left">{r.ab === "email" ? "email → тарифы" : "сразу тарифы"}</td>
-                    <td>{r.visit}</td>
-                    <td>{r.email_gate}</td>
+                    <td>{r.visit_rows}</td>
+                    <td>{r.email_gate_rows}</td>
                     <td>{r.emails}</td>
-                    <td>{r.paywall}</td>
+                    <td>{r.paywall_rows}</td>
                     <td>{r.signup}</td>
                     <td>{r.checkout}</td>
                     <td>{r.paid}</td>
@@ -214,7 +218,7 @@ export default async function FunnelPage({ params, searchParams }: {
 
       <section className="mt-6">
         <h2 className="mb-2 text-sm font-semibold">По сериалам</h2>
-        <p className="mb-2 text-xs text-muted">браузеры · строк</p>
+        <p className="mb-2 text-xs text-muted">сколько раз · браузеров</p>
         {data.by_series.length === 0 ? (
           <p className="text-xs text-muted">пока пусто</p>
         ) : (
@@ -232,10 +236,10 @@ export default async function FunnelPage({ params, searchParams }: {
               {data.by_series.map((row) => (
                 <tr key={row.slug} className="border-t border-border text-right">
                   <td className="max-w-48 truncate py-1.5 text-left">{seriesName(row.slug)}</td>
-                  <td className="px-1">{row.cover} <span className="text-xs text-muted">· {row.cover_rows}</span></td>
-                  <td className="px-1">{row.series} <span className="text-xs text-muted">· {row.series_rows}</span></td>
-                  <td className="px-1">{row.episode} <span className="text-xs text-muted">· {row.episode_rows}</span></td>
-                  <td className="px-1">{row.paywall} <span className="text-xs text-muted">· {row.paywall_rows}</span></td>
+                  <td className="px-1">{row.cover_rows} <span className="text-xs text-muted">· {row.cover}</span></td>
+                  <td className="px-1">{row.series_rows} <span className="text-xs text-muted">· {row.series}</span></td>
+                  <td className="px-1">{row.episode_rows} <span className="text-xs text-muted">· {row.episode}</span></td>
+                  <td className="px-1">{row.paywall_rows} <span className="text-xs text-muted">· {row.paywall}</span></td>
                 </tr>
               ))}
             </tbody>
@@ -247,7 +251,7 @@ export default async function FunnelPage({ params, searchParams }: {
   );
 }
 
-type StepRow = Record<Step, number> & { label: string; revenue: number };
+type StepRow = Partial<Counts> & { label: string; revenue: number };
 
 function StepTable({ title, steps, rows, note }: {
   title: string;
@@ -277,7 +281,7 @@ function StepTable({ title, steps, rows, note }: {
                 <tr key={row.label} className="border-t border-border text-right">
                   <td className="max-w-48 truncate py-1.5 text-left" title={row.label}>{row.label}</td>
                   {steps.map((s) => (
-                    <td key={s} className={`px-1 ${row[s] === 0 ? "text-muted" : ""}`}>{row[s]}</td>
+                    <td key={s} className={`px-1 ${count(row, s) === 0 ? "text-muted" : ""}`}>{count(row, s)}</td>
                   ))}
                   <td className={`px-1 ${row.revenue ? "" : "text-muted"}`}>{row.revenue ? formatIdr(row.revenue) : "—"}</td>
                 </tr>

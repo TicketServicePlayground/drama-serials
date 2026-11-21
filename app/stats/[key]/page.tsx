@@ -76,9 +76,9 @@ export default async function StatsPage({ params }: {
         {periods.map(([label, t]) => (
           <div key={label} className="rounded-xl border border-border bg-surface p-3">
             <p className="text-xs text-muted">{label}</p>
-            <p className="mt-1 text-2xl font-bold tabular-nums">{t.browsers}</p>
-            <p className="text-xs text-muted">браузеров · {t.views} просм.</p>
-            <p className="text-xs text-muted tabular-nums">без id браузера {t.views_no_id} · в аккаунте {t.signed_in_views}</p>
+            <p className="mt-1 text-2xl font-bold tabular-nums">{t.views}</p>
+            <p className="text-xs text-muted">визитов (просмотров страниц)</p>
+            <p className="text-xs text-muted tabular-nums">браузеров {t.browsers} · в аккаунте {t.signed_in_views}</p>
             <p className="mt-1 text-xs tabular-nums">заходов {t.sessions} · повторных {t.returns}</p>
             <p className="mt-2 text-xs tabular-nums">
               рег. {t.signups} · опл. {t.paid}
@@ -94,10 +94,10 @@ export default async function StatsPage({ params }: {
           <thead className="text-xs text-muted">
             <tr className="text-right">
               <th className="py-1 text-left font-normal">день</th>
+              <th className="font-normal">визиты</th>
               <th className="font-normal">браузеры</th>
               <th className="font-normal">заходы</th>
               <th className="font-normal">повт.</th>
-              <th className="font-normal">просм.</th>
               <th className="font-normal">рег.</th>
               <th className="font-normal">опл.</th>
             </tr>
@@ -106,10 +106,10 @@ export default async function StatsPage({ params }: {
             {data.by_day.map((d) => (
               <tr key={d.day} className={`border-t border-border text-right ${d.views === 0 ? "text-muted" : ""}`}>
                 <td className="py-1.5 text-left">{dayFmt.format(new Date(d.day))}</td>
+                <td>{d.views}</td>
                 <td>{d.browsers}</td>
                 <td>{d.sessions}</td>
                 <td>{d.returns}</td>
-                <td>{d.views}</td>
                 <td>{d.signups}</td>
                 <td>{d.paid}</td>
               </tr>

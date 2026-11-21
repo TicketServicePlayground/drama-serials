@@ -5,6 +5,7 @@ from typing import Any
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     Date,
     DateTime,
     Enum,
@@ -237,6 +238,10 @@ class Visit(Base):
     client_id: Mapped[str] = mapped_column(String(32), server_default="", default="", index=True)
     # A/B group of the browser ("paywall" / "email", see User.ab); "" = before the test.
     ab: Mapped[str] = mapped_column(String(16), server_default="", default="")
+    # Set by the browser from its cookies (lib/track.ts): no an_s cookie (30 minutes, renewed on
+    # each visit) = the start of a visit session; and an_seen (2 years) there = a returning browser.
+    new_session: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
+    is_return: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
     user_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )

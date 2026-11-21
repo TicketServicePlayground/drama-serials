@@ -103,8 +103,15 @@ async def test_stats_are_plain_counts_of_rows(client):
     await client.post("/api/v1/visits", json={**view, "cid": "d1" * 12, "event": "cover", "target": "x"})
     await client.post("/api/v1/visits", json={**view, "ua": "Googlebot/2.1"})
 
+    # The browser's cookie flags: a new session, and one of a browser seen before.
+    await client.post("/api/v1/visits", json={**view, "new_session": True})
+    await client.post("/api/v1/visits", json={**view, "new_session": True, "returning": True})
+    # "returning" without a new session is not a return visit.
+    await client.post("/api/v1/visits", json={**view, "returning": True})
+
     after = await today(client)
-    assert after["views"] - before["views"] == 4
+    assert after["views"] - before["views"] == 7
+    assert (after["sessions"] - before["sessions"], after["returns"] - before["returns"]) == (2, 1)
     assert (await client.get(STATS)).status_code == 404
 
 

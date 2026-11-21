@@ -8,7 +8,7 @@ import { findSerial } from "@/lib/catalog";
 export const metadata: Metadata = { title: "Статистика", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-interface Totals { views: number; signed_in_views: number; signups: number; paid: number; revenue: number }
+interface Totals { views: number; signed_in_views: number; sessions: number; returns: number; signups: number; paid: number; revenue: number }
 interface Top { name: string; views: number }
 interface Stats {
   timezone: string;
@@ -16,7 +16,7 @@ interface Stats {
   yesterday: Totals;
   week: Totals;
   month: Totals;
-  by_day: { day: string; views: number; signups: number; paid: number; revenue: number }[];
+  by_day: { day: string; views: number; sessions: number; returns: number; signups: number; paid: number; revenue: number }[];
   pages: Top[];
   referrers: Top[];
   utm: Top[];
@@ -80,6 +80,7 @@ export default async function StatsPage({ params }: {
             <p className="mt-1 text-2xl font-bold tabular-nums">{t.views}</p>
             <p className="text-xs text-muted">визитов (просмотров страниц)</p>
             <p className="text-xs text-muted tabular-nums">из них в аккаунте {t.signed_in_views}</p>
+            <p className="mt-1 text-xs tabular-nums">заходов {t.sessions} · повторных {t.returns}</p>
             <p className="mt-2 text-xs tabular-nums">
               рег. {t.signups} · опл. {t.paid}
               {t.revenue > 0 && <span className="text-muted"> · {formatIdr(t.revenue)}</span>}
@@ -95,6 +96,8 @@ export default async function StatsPage({ params }: {
             <tr className="text-right">
               <th className="py-1 text-left font-normal">день</th>
               <th className="font-normal">визиты</th>
+              <th className="font-normal">заходы</th>
+              <th className="font-normal">повт.</th>
               <th className="font-normal">рег.</th>
               <th className="font-normal">опл.</th>
               <th className="font-normal">выручка</th>
@@ -105,6 +108,8 @@ export default async function StatsPage({ params }: {
               <tr key={d.day} className={`border-t border-border text-right ${d.views === 0 ? "text-muted" : ""}`}>
                 <td className="py-1.5 text-left">{dayFmt.format(new Date(d.day))}</td>
                 <td>{d.views}</td>
+                <td>{d.sessions}</td>
+                <td>{d.returns}</td>
                 <td>{d.signups}</td>
                 <td>{d.paid}</td>
                 <td>{d.revenue ? formatIdr(d.revenue) : "—"}</td>
@@ -169,7 +174,9 @@ export default async function StatsPage({ params }: {
       <p className="mt-8 text-xs text-muted">
         Все числа — просто количество строк, никого не склеиваем и не угадываем. Визит — одна строка visits без события
         (открытие страницы), «в аккаунте» — из них те, где человек был залогинен. Регистрации — строки users по
-        created_at, оплаты — строки payments со status = paid по paid_at. Дни и время — по Бали (WITA). Боты по
+        created_at, оплаты — строки payments со status = paid по paid_at. Заход — строка, которую браузер пометил как
+        начало захода (не было куки an_s: 30 минут без визитов); повторный — начало захода браузера, у которого уже была
+        кука an_seen (бывал раньше). Считается с 21.11. Дни и время — по Бали (WITA). Боты по
         User-Agent не записываются. Числа справа в списках — визиты.
       </p>
     </main>

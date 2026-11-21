@@ -60,6 +60,20 @@ export function clientId(): string {
   }
 }
 
+const SEEN_COOKIE = "an_seen";
+const SESSION_COOKIE = "an_s";
+
+/** From this browser's cookies: is this the first visit of a session (no an_s: nothing for
+ * 30 minutes), and has the browser been here before (an_seen)? Renews both cookies. */
+function arrival(secure: string): { new_session: boolean; returning: boolean } {
+  const has = (name: string) => document.cookie.split(/;\s*/).some((c) => c.startsWith(`${name}=`));
+  const seen = has(SEEN_COOKIE);
+  const live = has(SESSION_COOKIE);
+  document.cookie = `${SEEN_COOKIE}=1; path=/; max-age=63072000; SameSite=Lax${secure}`;
+  document.cookie = `${SESSION_COOKIE}=1; path=/; max-age=1800; SameSite=Lax${secure}`;
+  return { new_session: !live, returning: seen && !live };
+}
+
 export function sendVisit(beacon: VisitBeacon): void {
   if (typeof window === "undefined" || navigator.webdriver || window.location.pathname.startsWith("/stats")) return;
   const cid = clientId();
@@ -69,7 +83,8 @@ export function sendVisit(beacon: VisitBeacon): void {
   // For the site's server: a sign-up or a payment made in this browser keeps the same label.
   const secure = window.location.protocol === "https:" ? "; Secure" : "";
   document.cookie = `${LABEL_KEY}=${encodeURIComponent(JSON.stringify({ ...label, ab, cid }))}; path=/; max-age=15552000; SameSite=Lax${secure}`;
-  const payload = new Blob([JSON.stringify({ ...beacon, ...label, cid, ab })], { type: "application/json" });
+  const flags = arrival(secure);
+  const payload = new Blob([JSON.stringify({ ...beacon, ...label, ...flags, cid, ab })], { type: "application/json" });
   if (!navigator.sendBeacon?.("/api/v", payload)) {
     fetch("/api/v", { method: "POST", body: payload, keepalive: true }).catch(() => {});
   }

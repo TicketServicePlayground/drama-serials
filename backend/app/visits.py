@@ -90,6 +90,9 @@ class PageView(BaseModel):
     utm_campaign: str = ""
     utm_content: str = ""
     fbclid: bool = False
+    # From the browser's cookies: the first visit of a session, and of a browser seen before.
+    new_session: bool = False
+    returning: bool = False
     # ISO code from the proxy in front of the site (CF-IPCountry / nginx GeoIP); "" = unknown.
     country: str = ""
     lang: str = ""
@@ -120,6 +123,8 @@ async def track(body: PageView, user: CurrentUser, session: Session):
         utm_campaign=body.utm_campaign.strip()[:150],
         utm_content=body.utm_content.strip()[:150],
         fbclid=body.fbclid,
+        new_session=body.new_session,
+        is_return=body.returning and body.new_session,
         country=country if COUNTRY_RE.match(country) and country not in ("XX", "T1") else "",
         lang=body.lang[:8],
         device=device_of(body.ua),
@@ -192,7 +197,8 @@ COUNTS = ", ".join(
 
 @router.get("/stats")
 async def stats(session: Session, key: Annotated[str, Query()] = ""):
-    """Page views (visits rows with event ""), sign-ups and payments, by Bali day; plain counts."""
+    """Page views (visits rows with event ""), sessions and return sessions (rows the browser
+    flagged from its cookies), sign-ups and payments, by Bali day; plain counts."""
     if not settings.stats_key or not hmac.compare_digest(key, settings.stats_key):
         return JSONResponse({"error": "not_found"}, status_code=404)
     tz = {"tz": TZ_NAME}
@@ -205,6 +211,8 @@ async def stats(session: Session, key: Annotated[str, Query()] = ""):
                 text(
                     f"SELECT (SELECT count(*) FROM visits WHERE event = '' AND {IN_PERIOD.format(col='at')}) AS views, "
                     f"(SELECT count(*) FROM visits WHERE event = '' AND user_id IS NOT NULL AND {IN_PERIOD.format(col='at')}) AS signed_in_views, "
+                    f"(SELECT count(*) FROM visits WHERE new_session AND {IN_PERIOD.format(col='at')}) AS sessions, "
+                    f"(SELECT count(*) FROM visits WHERE is_return AND {IN_PERIOD.format(col='at')}) AS returns, "
                     f"(SELECT count(*) FROM users WHERE {IN_PERIOD.format(col='created_at')}) AS signups, "
                     f"(SELECT count(*) FROM payments WHERE status = 'paid' AND {IN_PERIOD.format(col='paid_at')}) AS paid, "
                     f"(SELECT coalesce(sum(amount), 0) FROM payments WHERE status = 'paid' AND {IN_PERIOD.format(col='paid_at')}) AS revenue"
@@ -237,6 +245,8 @@ async def stats(session: Session, key: Annotated[str, Query()] = ""):
                 )
                 SELECT days.d AS day,
                   (SELECT count(*) FROM visits WHERE event = '' AND {DAY} = days.d) AS views,
+                  (SELECT count(*) FROM visits WHERE new_session AND {DAY} = days.d) AS sessions,
+                  (SELECT count(*) FROM visits WHERE is_return AND {DAY} = days.d) AS returns,
                   (SELECT count(*) FROM users WHERE (created_at AT TIME ZONE :tz)::date = days.d) AS signups,
                   (SELECT count(*) FROM payments WHERE status = 'paid' AND (paid_at AT TIME ZONE :tz)::date = days.d) AS paid,
                   (SELECT coalesce(sum(amount), 0) FROM payments WHERE status = 'paid' AND (paid_at AT TIME ZONE :tz)::date = days.d) AS revenue

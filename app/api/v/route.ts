@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
       utm_campaign: field("utm_campaign", 150),
       utm_content: field("utm_content", 150),
       fbclid: body?.fbclid === true,
+      new_session: body?.new_session === true,
+      returning: body?.returning === true,
       // Country of the IP from the proxy in front (Cloudflare or nginx GeoIP); the IP is not kept.
       country: (request.headers.get("cf-ipcountry") ?? request.headers.get("x-country") ?? "").slice(0, 2),
       lang: field("lang", 8),

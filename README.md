@@ -80,6 +80,8 @@ R2_ACCOUNT_ID=... R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... node scripts/imp
 node scripts/publish-images.mjs && node scripts/og-images.mjs && ./deploy.sh --push-content
 ```
 
+To take a series off the site, set `"hidden": true` on it in the server's `lib/catalog.json` (the sheet import keeps the flag; removing rows from the sheet alone is not enough — the next import would bring it back) and redeploy.
+
 A new series gets the CDN folder name as its slug, and the sheet has no series synopsis and no
 Spanish: add those to the catalog by hand (the site falls back to English meanwhile).
 

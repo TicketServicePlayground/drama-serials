@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       episode: body?.episode ?? null,
       locale: body?.locale,
       next: body?.next || null,
+      cid: typeof body?.cid === "string" ? body.cid.slice(0, 32) : "",
       ad,
     },
   });

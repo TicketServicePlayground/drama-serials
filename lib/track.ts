@@ -1,5 +1,5 @@
 // The site's own counter (backend/app/visits.py): page views from components/VisitCounter and
-// funnel clicks from here. No cookies; the API keeps a daily hash of IP + browser.
+// funnel clicks from here. No cookies; a person is the browser's random id (clientId).
 
 import { gateGroup } from "./ab";
 
@@ -21,8 +21,8 @@ export interface VisitBeacon {
 
 const CLIENT_ID_KEY = "vid";
 
-/** A random id kept in this browser: lets the counter see the same browser on another day. */
-function clientId(): string {
+/** A random id kept in this browser: the counter tells people apart by it (and nothing else). */
+export function clientId(): string {
   try {
     let id = localStorage.getItem(CLIENT_ID_KEY);
     if (!id || !/^[a-f0-9]{16,32}$/.test(id)) {

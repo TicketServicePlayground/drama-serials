@@ -26,7 +26,7 @@ async def test_visits_are_written_as_they_came(client):
     first = rows[-1]
     assert (first["referrer"], first["country"], first["lang"], first["device"], first["ab"]) == ("instagram.com", "ID", "ru", "mobile", "email")
     assert first["client_id"] == "ab" * 12 and len(first["visitor"]) == 16 and first["user_id"] is None
-    assert first["at"].endswith("+00:00")
+    assert first["at"].endswith("+08:00")
 
 
 async def test_raw_needs_the_key_and_a_known_table(client):
@@ -64,27 +64,6 @@ async def test_raw_csv_is_the_whole_period(client):
     assert len(empty.text.lstrip("﻿").splitlines()) == 1
 
 
-async def test_signing_up_at_paying_keeps_the_landing_source(client, gateways):
-    from sqlalchemy import select
-
-    from app.db import SessionLocal
-    from app.models import User
-
-    # Lands from an ad, makes a guest account at the paywall and goes straight to the QR code.
-    await client.post("/api/v1/visits", json={"ua": IPHONE, "ip": "9.3.3.3", "country": "CO", "path": "/series/x",
-                                              "utm_source": "meta", "utm_campaign": "guest-camp", "utm_content": "ad-1"})
-    token = (await client.post("/api/v1/auth/guest")).json()["token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    body = {"method": "QRIS", "product": "series_day", "slug": "x", "ad": {"ua": IPHONE}}
-    assert (await client.post("/api/v1/payments", json=body, headers={**headers, "X-Forwarded-For": "9.3.3.3"})).status_code == 200
-
-    async with SessionLocal() as session:
-        user = (await session.scalars(select(User).where(User.src_campaign == "guest-camp"))).one()
-        assert (user.src_content, user.src_country, user.src_source) == ("ad-1", "CO", "meta")
-    visits = await raw_rows(client, "visits")
-    assert any(v["user_id"] == str(user.id) and v["utm_campaign"] == "guest-camp" for v in visits)
-
-
 async def test_series_views_count_real_plays(client):
     for n in (1, 1, 2):
         await client.post("/api/v1/visits", json={"path": "/series/real-views", "ip": "8.1.1.1", "ua": IPHONE,
@@ -93,18 +72,99 @@ async def test_series_views_count_real_plays(client):
     assert views["series"]["real-views"] == 3 and views["episodes"]["real-views~1"] == 2
 
 
-async def test_the_ab_group_is_kept_on_the_user(client):
+STATS = "/api/v1/stats"
+FUNNEL = "/api/v1/funnel"
+
+
+async def today(client) -> dict:
+    return (await client.get(STATS, params={"key": "stats-key"})).json()["today"]
+
+
+async def funnel_today(client) -> dict:
+    return (await client.get(FUNNEL, params={"key": "stats-key", "period": "today"})).json()
+
+
+async def test_stats_count_rows_and_browsers_not_ips(client):
+    before = await today(client)
+    view = {"path": "/", "ip": "10.0.0.1", "ua": IPHONE}
+    # Two browsers behind one IP, same phone model: two browsers, three page views.
+    await client.post("/api/v1/visits", json={**view, "cid": "d1" * 12})
+    await client.post("/api/v1/visits", json={**view, "cid": "d1" * 12, "path": "/vip"})
+    await client.post("/api/v1/visits", json={**view, "cid": "d2" * 12})
+    # One more view without a browser id (storage blocked): a row, not a person.
+    await client.post("/api/v1/visits", json=view)
+    # A click is not a page view; a bot is not written.
+    await client.post("/api/v1/visits", json={**view, "cid": "d1" * 12, "event": "cover", "target": "x"})
+    await client.post("/api/v1/visits", json={**view, "ua": "Googlebot/2.1", "cid": "d3" * 12})
+
+    after = await today(client)
+    assert after["views"] - before["views"] == 4
+    assert after["browsers"] - before["browsers"] == 2
+    assert after["views_no_id"] - before["views_no_id"] == 1
+    assert (await client.get(STATS)).status_code == 404
+
+
+async def test_funnel_counts_browsers_and_rows(client):
+    land = {"path": "/", "ip": "10.0.0.2", "ua": IPHONE, "utm_source": "rowtest"}
+    for cid in ("e1" * 12, "e2" * 12):
+        await client.post("/api/v1/visits", json={**land, "cid": cid})
+    # Clicks carry no utm: they count for the source of their browser.
+    plain = {"path": "/", "ip": "10.0.0.9", "ua": MAC}
+    for _ in range(2):
+        await client.post("/api/v1/visits", json={**plain, "cid": "e1" * 12, "event": "cover", "target": "x"})
+    await client.post("/api/v1/visits", json={**plain, "cid": "e2" * 12, "event": "cover", "target": "x"})
+    # A landing without a browser id: one row of its own source.
+    await client.post("/api/v1/visits", json=land)
+
+    data = await funnel_today(client)
+    row = next(r for r in data["by_source"] if r["source"] == "rowtest")
+    assert (row["visit"], row["visit_rows"], row["visit_no_id"]) == (2, 3, 1)
+    assert (row["cover"], row["cover_rows"]) == (2, 3)
+    assert data["steps"][0] == "visit" and data["total"]["visit_rows"] >= 3
+    assert (await client.get(FUNNEL, params={"key": "wrong"})).status_code == 404
+
+
+async def test_a_payment_counts_for_the_browser_it_was_made_from(client, gateways):
+    from tests.test_flow import ref_of
+    from app.models import Provider
+
+    cid = "f1" * 12
+    await client.post("/api/v1/visits", json={"path": "/series/x", "ip": "10.0.0.3", "ua": IPHONE, "cid": cid, "country": "CO",
+                                              "utm_source": "meta", "utm_campaign": "pay-camp", "utm_content": "ad-1"})
+    # A guest account at the paywall, straight to the QR code: no signed-in page view at all.
+    token = (await client.post("/api/v1/auth/guest")).json()["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    body = {"method": "QRIS", "product": "series_day", "slug": "x", "cid": cid}
+    payment = (await client.post("/api/v1/payments", json=body, headers=headers)).json()
+    gateways[Provider.XENDIT].settle(await ref_of(payment["id"]), amount=12800)
+    await client.get(f"/api/v1/payments/{payment['id']}", headers=headers)
+
+    data = await funnel_today(client)
+    row = next(r for r in data["by_campaign"] if r["campaign"] == "pay-camp")
+    assert (row["content"], row["visit"], row["signup"], row["checkout"], row["paid"], row["revenue"]) == ("ad-1", 1, 1, 1, 1, 12800)
+    assert next(r for r in data["by_country"] if r["country"] == "CO")["paid"] >= 1
+    only_co = (await client.get(FUNNEL, params={"key": "stats-key", "period": "today", "country": "CO"})).json()
+    assert {r["country"] for r in only_co["by_country"]} == {"CO"}
+
+
+async def test_ab_groups_in_the_funnel(client):
     from sqlalchemy import select
 
     from app.db import SessionLocal
     from app.models import User
 
-    ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) AB-test"
-    for group, ip in (("paywall", "198.51.100.71"), ("email", "198.51.100.72")):
+    for group, cid in (("paywall", "a7" * 12), ("email", "b7" * 12)):
         headers = await signup(client)
-        await client.post("/api/v1/visits", json={"ua": ua, "ip": ip, "ab": group, "path": "/series/ab-show"}, headers=headers)
-    # A junk group is not kept.
-    await client.post("/api/v1/visits", json={"ua": ua, "ip": "198.51.100.73", "ab": "junk", "path": "/"})
+        base = {"ua": IPHONE, "ip": "10.0.0.4", "ab": group, "cid": cid}
+        await client.post("/api/v1/visits", json={**base, "path": "/series/ab-show"}, headers=headers)
+        event = "paywall" if group == "paywall" else "email_gate"
+        await client.post("/api/v1/visits", json={**base, "path": "/series/ab-show", "event": event, "target": "ab-show/8"}, headers=headers)
+    await client.post("/api/v1/visits", json={"ua": IPHONE, "ip": "10.0.0.5", "ab": "junk", "path": "/"})
     async with SessionLocal() as session:
         groups = {u.ab for u in (await session.scalars(select(User).where(User.ab != ""))).all()}
     assert {"paywall", "email"} <= groups and "junk" not in groups
+    rows = {r["ab"]: r for r in (await funnel_today(client))["by_ab"]}
+    assert rows["paywall"]["paywall"] >= 1 and rows["email"]["email_gate"] >= 1 and "junk" not in rows
+    assert rows["email"]["signup"] >= 1 and "emails" in rows["email"]
+    series = next(r for r in (await funnel_today(client))["by_series"] if r["slug"] == "ab-show")
+    assert series["series"] == 2 and series["paywall"] == 1

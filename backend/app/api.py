@@ -102,6 +102,8 @@ class NewPayment(BaseModel):
     next: str | None = None
     # The visitor's browser as the pixel sees it (the site reads the _fbp/_fbc cookies).
     ad: AdContext | None = None
+    # The paying browser's counter id (lib/track.ts clientId), "" = unknown.
+    cid: str = Field(default="", max_length=32)
 
 
 async def current_user(
@@ -350,9 +352,9 @@ async def start_payment(body: NewPayment, request: Request, user: CurrentUser, s
     if method == PaymentMethod.CARD and not user.email:
         return error("email_required", 400)
     product = products()[body.product]
-    from app.visits import link_payer  # app.visits imports this module
+    from app.visits import link_browser  # app.visits imports this module
 
-    await link_payer(session, user, client_ip(request), body.ad.ua if body.ad and body.ad.ua else "")
+    await link_browser(session, user, body.cid)
     locale = body.locale if body.locale in LOCALES else "en"
     next_slug = body.next if body.next and SLUG_RE.match(body.next) else None
     target_slug = target_episode = None

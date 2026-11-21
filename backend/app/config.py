@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     # Events Manager → Test events code, to check the setup; leave empty in production.
     meta_test_event_code: str = ""
 
-    # Secret part of the raw data link (/stats/<key> on the site); empty = off.
+    # Secret part of the visit stats link (/stats/<key> on the site); empty = stats off.
     stats_key: str = ""
     # Outgoing mail (series-pass reminders, app/reminders.py); empty host = no emails.
     smtp_host: str = ""

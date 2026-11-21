@@ -21,6 +21,8 @@ interface RawSerial {
   tag: string;
   /** VIP series (sheet column "VIP"): watched only with a VIP pass, episodes are not sold alone. */
   vip?: boolean;
+  /** Taken off the site (set by hand in the server's catalog); the sheet import keeps it. */
+  hidden?: boolean;
   genre: string;
   views: number;
   likes: number;
@@ -29,7 +31,8 @@ interface RawSerial {
   episodes: RawEpisode[];
 }
 
-const raw = rawCatalog as RawSerial[];
+// Hidden series are not shown anywhere: not in the showcase, their pages answer 404.
+const raw = (rawCatalog as RawSerial[]).filter((serial) => !serial.hidden);
 
 /** The requested language, then English, then whatever the series has. */
 function pick(texts: Texts | undefined, locale: Locale): string {

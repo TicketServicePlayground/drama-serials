@@ -1,4 +1,4 @@
-// The A/B test at the first locked episode (backend: users.ab, visits.ab, /funnel by_ab):
+// The A/B test at the first locked episode (stored in users.ab and visits.ab, see /stats/<key>):
 //   "paywall" - the plans at once, as before;
 //   "email"   - first, once, an offer: leave an email for a few more free episodes (EmailGate),
 //               then the plans at the episode after those.

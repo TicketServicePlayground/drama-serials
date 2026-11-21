@@ -1,7 +1,7 @@
 import "server-only";
 
 // The Python API lives next to this app (docker network `api:8000`); browsers never call it.
-const API_URL = process.env.API_URL || "http://localhost:8020";
+export const API_URL = process.env.API_URL || "http://localhost:8020";
 
 export type { AccountView as Account } from "./billing-types";
 
